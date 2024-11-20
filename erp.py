@@ -188,4 +188,39 @@ def gestion_reportes():
             pdf.cell(200, 10, txt="Reporte Contable de Ventas", ln=True, align="C")
             
             for _, factura in st.session_state["facturas"].iterrows():
-                pdf.cell(200,
+                pdf.cell(200, 10, f"Factura ID: {factura['Factura ID']} - Cliente: {factura['Cliente Nombre']}", ln=True)
+                pdf.cell(200, 10, f"Total: ${factura['Total']:.2f} - IVA: ${factura['IVA']:.2f}", ln=True)
+                pdf.cell(200, 10, f"Fecha: {factura['Fecha']}", ln=True)
+                pdf.ln(10)
+            
+            # Guardar PDF en disco
+            with open("/mnt/data/reporte_ventas.pdf", "wb") as f:
+                f.write(pdf.output(dest="S").encode("latin1"))
+            
+            st.download_button(
+                label="Descargar Reporte en PDF",
+                data=open("/mnt/data/reporte_ventas.pdf", "rb").read(),
+                file_name="reporte_ventas.pdf",
+                mime="application/pdf"
+            )
+
+# Menú de navegación
+modulo = st.sidebar.radio("Selecciona el módulo", [
+    "Gestión de Clientes", 
+    "Gestión de Inventario", 
+    "Generar Factura", 
+    "Análisis de Ventas",
+    "Generación de Reportes Contables"
+])
+
+# Ejecutar función basada en la opción seleccionada
+if modulo == "Gestión de Clientes":
+    gestion_clientes()
+elif modulo == "Gestión de Inventario":
+    gestion_inventario()
+elif modulo == "Generar Factura":
+    gestion_facturas()
+elif modulo == "Análisis de Ventas":
+    analisis_ventas()
+else:
+    gestion_reportes()
