@@ -9,12 +9,9 @@ st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 USER = "Lira"
 PASSWORD = "Lir@1120"
 
-# Inicialización de estados en sesión
+# Inicialización de variables globales
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
-
-if "modulo" not in st.session_state:
-    st.session_state["modulo"] = None
 
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
@@ -83,9 +80,6 @@ def gestion_inventario():
 
 def gestion_facturas():
     st.header("Gestión de Facturas")
-    if st.session_state["clientes"].empty or st.session_state["inventario"].empty:
-        st.warning("Debe registrar al menos un cliente y un producto antes de generar una factura.")
-        return
     with st.form("Registrar Factura"):
         cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
         productos = st.multiselect("Seleccionar Productos", st.session_state["inventario"]["Producto"])
@@ -110,53 +104,48 @@ def gestion_facturas():
             st.success(f"Factura registrada con un total de ${total}.")
     st.dataframe(st.session_state["facturas"])
     exportar_csv(st.session_state["facturas"], "facturas.csv")
-    if st.button("Imprimir Factura"):
-        factura_id = st.number_input("Factura ID", min_value=1, step=1)
-        factura = st.session_state["facturas"].iloc[factura_id - 1].to_dict()
-        pdf = generar_pdf(factura_id, factura)
-        st.download_button("Descargar Factura PDF", data=pdf, file_name=f"factura_{factura_id}.pdf", mime="application/pdf")
 
 def gestion_reportes():
     st.header("Gestión de Reportes")
     total_ventas = st.session_state["facturas"]["Total"].sum()
     st.write(f"Ventas Totales: ${total_ventas}")
-    # Generar más reportes aquí
     exportar_csv(st.session_state["facturas"], "reporte.csv")
 
-# Interfaz principal
-with st.sidebar:
-    st.title("ERP con Autenticación")
-    if not st.session_state["auth"]:
-        st.subheader("Iniciar Sesión")
-        usuario = st.text_input("Usuario")
-        contraseña = st.text_input("Contraseña", type="password")
-        if st.button("Ingresar"):
-            if usuario == USER and contraseña == PASSWORD:
-                st.session_state["auth"] = True
-                st.success("Inicio de sesión exitoso.")
+# Barra lateral
+def barra_lateral():
+    with st.sidebar:
+        st.title("ERP con Autenticación")
+        if not st.session_state["auth"]:
+            st.subheader("Iniciar Sesión")
+            usuario = st.text_input("Usuario")
+            contraseña = st.text_input("Contraseña", type="password")
+            if st.button("Ingresar"):
+                if usuario == USER and contraseña == PASSWORD:
+                    st.session_state["auth"] = True
+                    st.experimental_rerun()
+                else:
+                    st.error("Usuario o contraseña incorrectos.")
+        else:
+            modulo = st.radio("Módulos:", [
+                "Gestión de Clientes", 
+                "Gestión de Inventario", 
+                "Gestión de Facturas", 
+                "Gestión de Reportes"
+            ])
+            if st.button("Cerrar Sesión"):
+                st.session_state["auth"] = False
                 st.experimental_rerun()
-            else:
-                st.error("Usuario o contraseña incorrectos.")
-    else:
-        st.session_state["modulo"] = st.radio("Módulos:", [
-            "Gestión de Clientes", 
-            "Gestión de Inventario", 
-            "Gestión de Facturas", 
-            "Gestión de Reportes"
-        ])
-        if st.button("Cerrar Sesión"):
-            st.session_state["auth"] = False
-            st.session_state["modulo"] = None
-            st.success("Sesión cerrada correctamente.")
-            st.experimental_rerun()
+            return modulo
 
-# Renderización de módulos
+# Control de navegación
+modulo = barra_lateral()
+
 if st.session_state["auth"]:
-    if st.session_state["modulo"] == "Gestión de Clientes":
+    if modulo == "Gestión de Clientes":
         gestion_clientes()
-    elif st.session_state["modulo"] == "Gestión de Inventario":
+    elif modulo == "Gestión de Inventario":
         gestion_inventario()
-    elif st.session_state["modulo"] == "Gestión de Facturas":
+    elif modulo == "Gestión de Facturas":
         gestion_facturas()
-    elif st.session_state["modulo"] == "Gestión de Reportes":
+    elif modulo == "Gestión de Reportes":
         gestion_reportes()
