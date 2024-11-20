@@ -204,22 +204,55 @@ def analisis_ventas():
         st.dataframe(ventas_por_cliente)
 
 def gestion_reportes():
-    if not autenticar_usuario():
-        return  # Si no está autenticado, no se permite acceder a los módulos
-
     st.header("Generación de Reportes Contables")
-    if st.button("Generar Reporte Contable"):
-        # Generación de un reporte simple en PDF
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Reporte Contable", ln=True, align="C")
-        pdf.ln(10)
+    if st.session_state["facturas"].empty:
+        st.warning("No hay ventas registradas.")
+    else:
+        st.subheader("Reporte de Ventas")
+        st.write("Generación de reporte contable de todas las ventas realizadas.")
         
-        # Exportar el reporte
-        st.download_button(
-            label="Descargar Reporte Contable",
-            data=pdf.output(dest="S").encode("latin1"),
-            file_name="reporte_contable.pdf",
-            mime="application/pdf"
-        )
+        # Reporte en formato PDF
+        if st.button("Generar Reporte Contable PDF"):
+            pdf = FPDF()
+            pdf.set_auto_page_break(auto=True, margin=15)
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt="Reporte Contable de Ventas", ln=True, align="C")
+            
+            for _, factura in st.session_state["facturas"].iterrows():
+                pdf.cell(200, 10, f"Factura ID: {factura['Factura ID']} - Cliente: {factura['Cliente Nombre']}", ln=True)
+                pdf.cell(200, 10, f"Total: ${factura['Total']:.2f} - IVA: ${factura['IVA']:.2f}", ln=True)
+                pdf.cell(200, 10, f"Fecha: {factura['Fecha']}", ln=True)
+                pdf.ln(10)
+            
+            # Guardar PDF en disco
+            with open("/mnt/data/reporte_ventas.pdf", "wb") as f:
+                f.write(pdf.output(dest="S").encode("latin1"))
+            
+            st.download_button(
+                label="Descargar Reporte en PDF",
+                data=open("/mnt/data/reporte_ventas.pdf", "rb").read(),
+                file_name="reporte_ventas.pdf",
+                mime="application/pdf"
+            )
+
+# Menú de navegación
+modulo = st.sidebar.radio("Selecciona el módulo", [
+    "Gestión de Clientes", 
+    "Gestión de Inventario", 
+    "Generar Factura", 
+    "Análisis de Ventas",
+    "Generación de Reportes Contables"
+])
+
+# Ejecutar función basada en la opción seleccionada
+if modulo == "Gestión de Clientes":
+    gestion_clientes()
+elif modulo == "Gestión de Inventario":
+    gestion_inventario()
+elif modulo == "Generar Factura":
+    gestion_facturas()
+elif modulo == "Análisis de Ventas":
+    analisis_ventas()
+else:
+    gestion_reportes()
