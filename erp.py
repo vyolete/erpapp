@@ -20,10 +20,13 @@ if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
 
 if "facturas" not in st.session_state:
-    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Detalles", "Total"])
+    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
 
 if "inventario" not in st.session_state:
     st.session_state["inventario"] = pd.DataFrame(columns=["Producto", "Cantidad", "Precio Unitario"])
+
+if "ventas" not in st.session_state:
+    st.session_state["ventas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Total", "IVA", "Fecha"])
 
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
@@ -48,8 +51,20 @@ def gestion_clientes():
             nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
             st.session_state["clientes"] = pd.concat([st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True)
             st.success("Cliente registrado correctamente.")
-    st.dataframe(st.session_state["clientes"])
-    exportar_csv(st.session_state["clientes"], "clientes.csv")
+    # Búsqueda y eliminación de clientes
+    st.subheader("Buscar Cliente")
+    search_term = st.text_input("Buscar por nombre o ID")
+    if search_term:
+        clientes_filtrados = st.session_state["clientes"][st.session_state["clientes"]["Nombre"].str.contains(search_term, case=False)]
+        st.dataframe(clientes_filtrados)
+    else:
+        st.dataframe(st.session_state["clientes"])
+
+    # Eliminación de cliente
+    cliente_a_eliminar = st.selectbox("Seleccionar cliente para eliminar", st.session_state["clientes"]["ID"])
+    if st.button("Eliminar Cliente"):
+        st.session_state["clientes"] = st.session_state["clientes"][st.session_state["clientes"]["ID"] != cliente_a_eliminar]
+        st.success("Cliente eliminado correctamente.")
 
 def gestion_inventario():
     st.header("Gestión de Inventario")
@@ -62,16 +77,97 @@ def gestion_inventario():
             nuevo_producto = {"Producto": producto, "Cantidad": cantidad, "Precio Unitario": precio_unitario}
             st.session_state["inventario"] = pd.concat([st.session_state["inventario"], pd.DataFrame([nuevo_producto])], ignore_index=True)
             st.success("Producto registrado correctamente.")
-    st.dataframe(st.session_state["inventario"])
-    exportar_csv(st.session_state["inventario"], "inventario.csv")
+    
+    # Búsqueda de productos
+    st.subheader("Buscar Producto")
+    search_term = st.text_input("Buscar producto por nombre")
+    if search_term:
+        inventario_filtrado = st.session_state["inventario"][st.session_state["inventario"]["Producto"].str.contains(search_term, case=False)]
+        st.dataframe(inventario_filtrado)
+    else:
+        st.dataframe(st.session_state["inventario"])
+
+    # Eliminación de producto
+    producto_a_eliminar = st.selectbox("Seleccionar producto para eliminar", st.session_state["inventario"]["Producto"])
+    if st.button("Eliminar Producto"):
+        st.session_state["inventario"] = st.session_state["inventario"][st.session_state["inventario"]["Producto"] != producto_a_eliminar]
+        st.success("Producto eliminado correctamente.")
 
 def gestion_facturas():
-    st.header("Gestión de Facturas")
-    st.write("Función de gestión de facturas en construcción.")
+    st.header("Generar Factura")
+    st.write("Selecciona un cliente y productos para crear una factura.")
+
+    cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
+    cliente_nombre = st.session_state["clientes"][st.session_state["clientes"]["ID"] == cliente_id]["Nombre"].values[0]
+    
+    productos_seleccionados = []
+    total = 0
+    iva = 0
+    
+    for producto in st.session_state["inventario"]["Producto"]:
+        cantidad = st.number_input(f"Cantidad de {producto}", min_value=0, step=1)
+        if cantidad > 0:
+            producto_data = st.session_state["inventario"][st.session_state["inventario"]["Producto"] == producto]
+            precio_unitario = producto_data["Precio Unitario"].values[0]
+            total += cantidad * precio_unitario
+            productos_seleccionados.append((producto, cantidad, precio_unitario))
+    
+    iva = total * 0.16
+    total_con_iva = total + iva
+    
+    if st.button("Generar Factura"):
+        factura_id = f"F-{len(st.session_state['facturas']) + 1}"
+        st.session_state["facturas"] = pd.concat([st.session_state["facturas"], pd.DataFrame([{
+            "Factura ID": factura_id,
+            "Cliente ID": cliente_id,
+            "Cliente Nombre": cliente_nombre,
+            "Productos": productos_seleccionados,
+            "Total": total_con_iva,
+            "IVA": iva,
+            "Fecha": pd.Timestamp.now().strftime('%Y-%m-%d')
+        }])], ignore_index=True)
+        st.success(f"Factura {factura_id} generada correctamente.")
+    
+    st.dataframe(st.session_state["facturas"])
+    exportar_csv(st.session_state["facturas"], "facturas.csv")
+
+def analisis_ventas():
+    st.header("Análisis de Ventas")
+    if st.session_state["facturas"].empty:
+        st.warning("No hay ventas registradas.")
+    else:
+        st.subheader("Ventas Realizadas")
+        st.dataframe(st.session_state["facturas"])
+        
+        # Total de ventas
+        total_ventas = st.session_state["facturas"]["Total"].sum()
+        st.write(f"**Total de Ventas: ${total_ventas:,.2f}**")
+        
+        # Reporte de IVA
+        total_iva = st.session_state["facturas"]["IVA"].sum()
+        st.write(f"**IVA Total: ${total_iva:,.2f}**")
 
 def gestion_reportes():
-    st.header("Gestión de Reportes")
-    st.write("Función de generación de reportes en construcción.")
+    st.header("Generación de Reportes Contables")
+    if st.session_state["facturas"].empty:
+        st.warning("No hay ventas registradas.")
+    else:
+        st.subheader("Reporte de Ventas")
+        st.write("Generación de reporte contable de todas las ventas realizadas.")
+        
+        # Reporte en formato PDF
+        if st.button("Generar Reporte Contable PDF"):
+            pdf = FPDF()
+            pdf.set_auto_page_break(auto=True, margin=15)
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt="Reporte Contable de Ventas", ln=True, align="C")
+            
+            for _, factura in st.session_state["facturas"].iterrows():
+                pdf.cell(200, 10, txt=f"Factura ID: {factura['Factura ID']}, Cliente: {factura['Cliente Nombre']}, Total: ${factura['Total']}, IVA: ${factura['IVA']}", ln=True)
+            
+            pdf.output("/mnt/data/reporte_contable.pdf")
+            st.download_button("Descargar Reporte Contable", "/mnt/data/reporte_contable.pdf")
 
 # Barra lateral
 def barra_lateral():
@@ -86,32 +182,4 @@ def barra_lateral():
                     st.session_state["auth"] = True
                     st.experimental_rerun()  # Refrescar la app para mostrar los módulos
                 else:
-                    st.error("Usuario o contraseña incorrectos.")
-        else:
-            st.subheader(f"Bienvenido, {USER}")
-            st.session_state["modulo"] = st.radio("Módulos:", [
-                "Gestión de Clientes", 
-                "Gestión de Inventario", 
-                "Gestión de Facturas", 
-                "Gestión de Reportes"
-            ])
-            if st.button("Cerrar Sesión"):
-                st.session_state["auth"] = False
-                st.session_state["modulo"] = "Gestión de Clientes"
-                st.experimental_rerun()
-
-# Control de navegación
-barra_lateral()
-
-if st.session_state["auth"]:
-    if st.session_state["modulo"] == "Gestión de Clientes":
-        gestion_clientes()
-    elif st.session_state["modulo"] == "Gestión de Inventario":
-        gestion_inventario()
-    elif st.session_state["modulo"] == "Gestión de Facturas":
-        gestion_facturas()
-    elif st.session_state["modulo"] == "Gestión de Reportes":
-        gestion_reportes()
-else:
-    st.warning("Por favor, inicia sesión para continuar.")
-
+                    st
