@@ -84,9 +84,11 @@ def barra_lateral():
             if st.button("Ingresar"):
                 if usuario == USER and contraseña == PASSWORD:
                     st.session_state["auth"] = True
+                    st.experimental_rerun()  # Refrescar la app para mostrar los módulos
                 else:
                     st.error("Usuario o contraseña incorrectos.")
         else:
+            st.subheader(f"Bienvenido, {USER}")
             st.session_state["modulo"] = st.radio("Módulos:", [
                 "Gestión de Clientes", 
                 "Gestión de Inventario", 
@@ -96,6 +98,7 @@ def barra_lateral():
             if st.button("Cerrar Sesión"):
                 st.session_state["auth"] = False
                 st.session_state["modulo"] = "Gestión de Clientes"
+                st.experimental_rerun()
 
 # Control de navegación
 barra_lateral()
@@ -111,3 +114,4 @@ if st.session_state["auth"]:
         gestion_reportes()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
+
