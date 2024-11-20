@@ -5,6 +5,13 @@ from fpdf import FPDF
 # Configuración inicial
 st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 
+import streamlit as st
+import pandas as pd
+from fpdf import FPDF
+
+# Configuración inicial
+st.set_page_config(page_title="ERP con Autenticación", layout="wide")
+
 # Variables de autenticación
 USER = "Lira"
 PASSWORD = "Lir@1120"
@@ -12,6 +19,9 @@ PASSWORD = "Lir@1120"
 # Inicialización de variables globales
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
+
+if "modulo" not in st.session_state:
+    st.session_state["modulo"] = "Gestión de Clientes"
 
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
@@ -31,22 +41,6 @@ def exportar_csv(df, nombre_archivo):
         file_name=nombre_archivo,
         mime="text/csv",
     )
-
-def generar_pdf(factura_id, factura):
-    """Genera un PDF con los detalles de la factura."""
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Factura #{factura_id}", ln=True, align="C")
-    pdf.cell(200, 10, txt=f"Cliente: {factura['Cliente Nombre']}", ln=True, align="L")
-    pdf.ln(10)
-    pdf.cell(200, 10, txt="Detalles de la Factura:", ln=True, align="L")
-    pdf.ln(5)
-    for detalle in factura["Detalles"]:
-        pdf.cell(200, 10, txt=f"Producto: {detalle['Producto']}, Cantidad: {detalle['Cantidad']}, Subtotal: ${detalle['Subtotal']}", ln=True, align="L")
-    pdf.ln(5)
-    pdf.cell(200, 10, txt=f"Total: ${factura['Total']}", ln=True, align="L")
-    return pdf.output(dest="S").encode("latin1")
 
 # Funciones de los módulos
 def gestion_clientes():
@@ -80,36 +74,11 @@ def gestion_inventario():
 
 def gestion_facturas():
     st.header("Gestión de Facturas")
-    with st.form("Registrar Factura"):
-        cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
-        productos = st.multiselect("Seleccionar Productos", st.session_state["inventario"]["Producto"])
-        submitted = st.form_submit_button("Registrar Factura")
-        if submitted and productos:
-            total = 0
-            detalles = []
-            for producto in productos:
-                cantidad = st.session_state["inventario"].loc[st.session_state["inventario"]["Producto"] == producto, "Cantidad"].values[0]
-                precio = st.session_state["inventario"].loc[st.session_state["inventario"]["Producto"] == producto, "Precio Unitario"].values[0]
-                subtotal = cantidad * precio
-                total += subtotal
-                detalles.append({"Producto": producto, "Cantidad": cantidad, "Subtotal": subtotal})
-            nueva_factura = {
-                "Factura ID": len(st.session_state["facturas"]) + 1,
-                "Cliente ID": cliente_id,
-                "Cliente Nombre": st.session_state["clientes"].loc[st.session_state["clientes"]["ID"] == cliente_id, "Nombre"].values[0],
-                "Detalles": detalles,
-                "Total": total,
-            }
-            st.session_state["facturas"] = pd.concat([st.session_state["facturas"], pd.DataFrame([nueva_factura])], ignore_index=True)
-            st.success(f"Factura registrada con un total de ${total}.")
-    st.dataframe(st.session_state["facturas"])
-    exportar_csv(st.session_state["facturas"], "facturas.csv")
+    st.write("Función de gestión de facturas en construcción.")
 
 def gestion_reportes():
     st.header("Gestión de Reportes")
-    total_ventas = st.session_state["facturas"]["Total"].sum()
-    st.write(f"Ventas Totales: ${total_ventas}")
-    exportar_csv(st.session_state["facturas"], "reporte.csv")
+    st.write("Función de generación de reportes en construcción.")
 
 # Barra lateral
 def barra_lateral():
@@ -122,11 +91,10 @@ def barra_lateral():
             if st.button("Ingresar"):
                 if usuario == USER and contraseña == PASSWORD:
                     st.session_state["auth"] = True
-                    st.experimental_rerun()
                 else:
                     st.error("Usuario o contraseña incorrectos.")
         else:
-            modulo = st.radio("Módulos:", [
+            st.session_state["modulo"] = st.radio("Módulos:", [
                 "Gestión de Clientes", 
                 "Gestión de Inventario", 
                 "Gestión de Facturas", 
@@ -134,18 +102,20 @@ def barra_lateral():
             ])
             if st.button("Cerrar Sesión"):
                 st.session_state["auth"] = False
-                st.experimental_rerun()
-            return modulo
+                st.session_state["modulo"] = "Gestión de Clientes"
 
 # Control de navegación
-modulo = barra_lateral()
+barra_lateral()
 
 if st.session_state["auth"]:
-    if modulo == "Gestión de Clientes":
+    if st.session_state["modulo"] == "Gestión de Clientes":
         gestion_clientes()
-    elif modulo == "Gestión de Inventario":
+    elif st.session_state["modulo"] == "Gestión de Inventario":
         gestion_inventario()
-    elif modulo == "Gestión de Facturas":
+    elif st.session_state["modulo"] == "Gestión de Facturas":
         gestion_facturas()
-    elif modulo == "Gestión de Reportes":
+    elif st.session_state["modulo"] == "Gestión de Reportes":
         gestion_reportes()
+else:
+    st.warning("Por favor, inicia sesión para continuar.")
+
