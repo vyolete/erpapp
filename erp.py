@@ -9,9 +9,12 @@ st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 USER = "Lira"
 PASSWORD = "Lir@1120"
 
-# Variables globales
+# Inicialización de estados en sesión
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
+
+if "modulo" not in st.session_state:
+    st.session_state["modulo"] = None
 
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
@@ -21,30 +24,6 @@ if "facturas" not in st.session_state:
 
 if "inventario" not in st.session_state:
     st.session_state["inventario"] = pd.DataFrame(columns=["Producto", "Cantidad", "Precio Unitario"])
-
-# Barra lateral personalizada
-with st.sidebar:
-    st.title("ERP con Autenticación")
-    if not st.session_state["auth"]:
-        st.subheader("Iniciar Sesión")
-        usuario = st.text_input("Usuario")
-        contraseña = st.text_input("Contraseña", type="password")
-        if st.button("Ingresar"):
-            if usuario == USER and contraseña == PASSWORD:
-                st.session_state["auth"] = True
-                st.success("Inicio de sesión exitoso.")
-            else:
-                st.error("Usuario o contraseña incorrectos.")
-    else:
-        modulo = st.radio("Módulos:", [
-            "Gestión de Clientes", 
-            "Gestión de Inventario", 
-            "Gestión de Facturas", 
-            "Gestión de Reportes"
-        ])
-        if st.button("Cerrar Sesión"):
-            st.session_state["auth"] = False
-            st.success("Sesión cerrada correctamente.")
 
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
@@ -104,6 +83,9 @@ def gestion_inventario():
 
 def gestion_facturas():
     st.header("Gestión de Facturas")
+    if st.session_state["clientes"].empty or st.session_state["inventario"].empty:
+        st.warning("Debe registrar al menos un cliente y un producto antes de generar una factura.")
+        return
     with st.form("Registrar Factura"):
         cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
         productos = st.multiselect("Seleccionar Productos", st.session_state["inventario"]["Producto"])
@@ -141,14 +123,40 @@ def gestion_reportes():
     # Generar más reportes aquí
     exportar_csv(st.session_state["facturas"], "reporte.csv")
 
-# Navegación
-if st.session_state["auth"]:
-    if modulo == "Gestión de Clientes":
-        gestion_clientes()
-    elif modulo == "Gestión de Inventario":
-        gestion_inventario()
-    elif modulo == "Gestión de Facturas":
-        gestion_facturas()
-    elif modulo == "Gestión de Reportes":
-        gestion_reportes()
+# Interfaz principal
+with st.sidebar:
+    st.title("ERP con Autenticación")
+    if not st.session_state["auth"]:
+        st.subheader("Iniciar Sesión")
+        usuario = st.text_input("Usuario")
+        contraseña = st.text_input("Contraseña", type="password")
+        if st.button("Ingresar"):
+            if usuario == USER and contraseña == PASSWORD:
+                st.session_state["auth"] = True
+                st.success("Inicio de sesión exitoso.")
+                st.experimental_rerun()
+            else:
+                st.error("Usuario o contraseña incorrectos.")
+    else:
+        st.session_state["modulo"] = st.radio("Módulos:", [
+            "Gestión de Clientes", 
+            "Gestión de Inventario", 
+            "Gestión de Facturas", 
+            "Gestión de Reportes"
+        ])
+        if st.button("Cerrar Sesión"):
+            st.session_state["auth"] = False
+            st.session_state["modulo"] = None
+            st.success("Sesión cerrada correctamente.")
+            st.experimental_rerun()
 
+# Renderización de módulos
+if st.session_state["auth"]:
+    if st.session_state["modulo"] == "Gestión de Clientes":
+        gestion_clientes()
+    elif st.session_state["modulo"] == "Gestión de Inventario":
+        gestion_inventario()
+    elif st.session_state["modulo"] == "Gestión de Facturas":
+        gestion_facturas()
+    elif st.session_state["modulo"] == "Gestión de Reportes":
+        gestion_reportes()
