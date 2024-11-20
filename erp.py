@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1y-nGvygsoXRevKgSOIlXcfr_o2QJTuwN
 """
 
-%%writefile erp_streamlit.py
+
 
 import streamlit as st
 import pandas as pd
