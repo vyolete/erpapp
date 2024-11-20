@@ -1,14 +1,18 @@
 import streamlit as st
 import pandas as pd
+from fpdf import FPDF
 
 # Configuración inicial
-st.set_page_config(page_title="ERP ITM", layout="wide")
+st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 
-# Personalización
-logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
-empresa_nombre = "Mi Empresa ERP"
+# Variables de autenticación
+USER = "Lira"
+PASSWORD = "Lir@1120"
 
 # Variables globales
+if "auth" not in st.session_state:
+    st.session_state["auth"] = False
+
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
 
@@ -18,101 +22,92 @@ if "facturas" not in st.session_state:
 if "inventario" not in st.session_state:
     st.session_state["inventario"] = pd.DataFrame(columns=["Producto", "Cantidad", "Precio Unitario"])
 
-if "comisiones" not in st.session_state:
-    st.session_state["comisiones"] = pd.DataFrame(columns=["Empleado", "Ventas Totales", "Comisión Ganada"])
-
 # Barra lateral personalizada
 with st.sidebar:
-    st.image(logo_url, width=150)
-    st.title(empresa_nombre)
-    module = st.radio("Módulos:", [
-        "Gestión de Clientes", 
-        "Gestión de Inventario", 
-        "Gestión de Facturas", 
-        "Gestión de Nómina", 
-        "Análisis de Ventas"
-    ])
+    st.title("ERP con Autenticación")
+    if not st.session_state["auth"]:
+        st.subheader("Iniciar Sesión")
+        usuario = st.text_input("Usuario")
+        contraseña = st.text_input("Contraseña", type="password")
+        if st.button("Ingresar"):
+            if usuario == USER and contraseña == PASSWORD:
+                st.session_state["auth"] = True
+                st.success("Inicio de sesión exitoso.")
+            else:
+                st.error("Usuario o contraseña incorrectos.")
+    else:
+        modulo = st.radio("Módulos:", [
+            "Gestión de Clientes", 
+            "Gestión de Inventario", 
+            "Gestión de Facturas", 
+            "Gestión de Reportes"
+        ])
+        if st.button("Cerrar Sesión"):
+            st.session_state["auth"] = False
+            st.success("Sesión cerrada correctamente.")
+
+# Funciones auxiliares
+def exportar_csv(df, nombre_archivo):
+    """Permite exportar un DataFrame como archivo CSV."""
+    st.download_button(
+        label="Exportar Datos",
+        data=df.to_csv(index=False).encode("utf-8"),
+        file_name=nombre_archivo,
+        mime="text/csv",
+    )
+
+def generar_pdf(factura_id, factura):
+    """Genera un PDF con los detalles de la factura."""
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Factura #{factura_id}", ln=True, align="C")
+    pdf.cell(200, 10, txt=f"Cliente: {factura['Cliente Nombre']}", ln=True, align="L")
+    pdf.ln(10)
+    pdf.cell(200, 10, txt="Detalles de la Factura:", ln=True, align="L")
+    pdf.ln(5)
+    for detalle in factura["Detalles"]:
+        pdf.cell(200, 10, txt=f"Producto: {detalle['Producto']}, Cantidad: {detalle['Cantidad']}, Subtotal: ${detalle['Subtotal']}", ln=True, align="L")
+    pdf.ln(5)
+    pdf.cell(200, 10, txt=f"Total: ${factura['Total']}", ln=True, align="L")
+    return pdf.output(dest="S").encode("latin1")
 
 # Funciones de los módulos
-def buscar_en_dataframe(df, columna, valor):
-    """Devuelve los registros que coincidan con el valor en una columna específica."""
-    return df[df[columna].str.contains(valor, case=False, na=False)]
-
-def eliminar_registro(df, index):
-    """Elimina un registro del DataFrame."""
-    return df.drop(index=index).reset_index(drop=True)
-
 def gestion_clientes():
     st.header("Gestión de Clientes")
-    
-    # Buscar clientes
-    search_term = st.text_input("Buscar Cliente por Nombre:")
-    if search_term:
-        resultados = buscar_en_dataframe(st.session_state["clientes"], "Nombre", search_term)
-        st.dataframe(resultados)
-    
     with st.form("Registro de Cliente"):
         cliente_id = st.text_input("ID del Cliente")
         nombre = st.text_input("Nombre")
         correo = st.text_input("Correo Electrónico")
         telefono = st.text_input("Teléfono")
         submitted = st.form_submit_button("Registrar Cliente")
-        
         if submitted:
             nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
             st.session_state["clientes"] = pd.concat([st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True)
             st.success("Cliente registrado correctamente.")
-    
-    st.subheader("Clientes Registrados")
     st.dataframe(st.session_state["clientes"])
-    
-    # Eliminar cliente
-    eliminar = st.selectbox("Selecciona un Cliente para Eliminar:", st.session_state["clientes"]["Nombre"])
-    if st.button("Eliminar Cliente"):
-        st.session_state["clientes"] = eliminar_registro(st.session_state["clientes"], st.session_state["clientes"][st.session_state["clientes"]["Nombre"] == eliminar].index[0])
-        st.success(f"Cliente '{eliminar}' eliminado correctamente.")
+    exportar_csv(st.session_state["clientes"], "clientes.csv")
 
 def gestion_inventario():
     st.header("Gestión de Inventario")
-    
-    # Buscar productos
-    search_term = st.text_input("Buscar Producto:")
-    if search_term:
-        resultados = buscar_en_dataframe(st.session_state["inventario"], "Producto", search_term)
-        st.dataframe(resultados)
-    
-    with st.form("Agregar Producto"):
+    with st.form("Registro de Producto"):
         producto = st.text_input("Producto")
         cantidad = st.number_input("Cantidad", min_value=1, step=1)
         precio_unitario = st.number_input("Precio Unitario", min_value=0.0, step=0.1)
         submitted = st.form_submit_button("Registrar Producto")
-        
         if submitted:
             nuevo_producto = {"Producto": producto, "Cantidad": cantidad, "Precio Unitario": precio_unitario}
             st.session_state["inventario"] = pd.concat([st.session_state["inventario"], pd.DataFrame([nuevo_producto])], ignore_index=True)
             st.success("Producto registrado correctamente.")
-    
-    st.subheader("Inventario")
     st.dataframe(st.session_state["inventario"])
-    
-    # Eliminar producto
-    eliminar = st.selectbox("Selecciona un Producto para Eliminar:", st.session_state["inventario"]["Producto"])
-    if st.button("Eliminar Producto"):
-        st.session_state["inventario"] = eliminar_registro(st.session_state["inventario"], st.session_state["inventario"][st.session_state["inventario"]["Producto"] == eliminar].index[0])
-        st.success(f"Producto '{eliminar}' eliminado correctamente.")
+    exportar_csv(st.session_state["inventario"], "inventario.csv")
 
 def gestion_facturas():
     st.header("Gestión de Facturas")
-    
-    if st.session_state["clientes"].empty or st.session_state["inventario"].empty:
-        st.warning("Es necesario registrar clientes y productos primero.")
-        return
-    
     with st.form("Registrar Factura"):
         cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
         productos = st.multiselect("Seleccionar Productos", st.session_state["inventario"]["Producto"])
         submitted = st.form_submit_button("Registrar Factura")
-        
         if submitted and productos:
             total = 0
             detalles = []
@@ -122,23 +117,38 @@ def gestion_facturas():
                 subtotal = cantidad * precio
                 total += subtotal
                 detalles.append({"Producto": producto, "Cantidad": cantidad, "Subtotal": subtotal})
-            
-            st.session_state["facturas"] = pd.concat([st.session_state["facturas"], pd.DataFrame([{
+            nueva_factura = {
                 "Factura ID": len(st.session_state["facturas"]) + 1,
                 "Cliente ID": cliente_id,
                 "Cliente Nombre": st.session_state["clientes"].loc[st.session_state["clientes"]["ID"] == cliente_id, "Nombre"].values[0],
                 "Detalles": detalles,
-                "Total": total
-            }])], ignore_index=True)
-            st.success(f"Factura registrada correctamente con un total de ${total}.")
-    
-    st.subheader("Facturas Registradas")
+                "Total": total,
+            }
+            st.session_state["facturas"] = pd.concat([st.session_state["facturas"], pd.DataFrame([nueva_factura])], ignore_index=True)
+            st.success(f"Factura registrada con un total de ${total}.")
     st.dataframe(st.session_state["facturas"])
+    exportar_csv(st.session_state["facturas"], "facturas.csv")
+    if st.button("Imprimir Factura"):
+        factura_id = st.number_input("Factura ID", min_value=1, step=1)
+        factura = st.session_state["facturas"].iloc[factura_id - 1].to_dict()
+        pdf = generar_pdf(factura_id, factura)
+        st.download_button("Descargar Factura PDF", data=pdf, file_name=f"factura_{factura_id}.pdf", mime="application/pdf")
 
-# Navegación entre módulos
-if module == "Gestión de Clientes":
-    gestion_clientes()
-elif module == "Gestión de Inventario":
-    gestion_inventario()
-elif module == "Gestión de Facturas":
-    gestion_facturas()
+def gestion_reportes():
+    st.header("Gestión de Reportes")
+    total_ventas = st.session_state["facturas"]["Total"].sum()
+    st.write(f"Ventas Totales: ${total_ventas}")
+    # Generar más reportes aquí
+    exportar_csv(st.session_state["facturas"], "reporte.csv")
+
+# Navegación
+if st.session_state["auth"]:
+    if modulo == "Gestión de Clientes":
+        gestion_clientes()
+    elif modulo == "Gestión de Inventario":
+        gestion_inventario()
+    elif modulo == "Gestión de Facturas":
+        gestion_facturas()
+    elif modulo == "Gestión de Reportes":
+        gestion_reportes()
+
