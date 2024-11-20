@@ -2,14 +2,7 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 
-# Configuración inicial
-st.set_page_config(page_title="ERP con Autenticación", layout="wide")
-
-import streamlit as st
-import pandas as pd
-from fpdf import FPDF
-
-# Configuración inicial
+# Configuración inicial: Esta línea debe ir primero
 st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 
 # Variables de autenticación
@@ -118,4 +111,3 @@ if st.session_state["auth"]:
         gestion_reportes()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
-
