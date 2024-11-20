@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 
-# Configuración inicial: Esta línea debe ir primero
+# Configuración inicial
 st.set_page_config(page_title="ERP con Autenticación", layout="wide")
 
 # Variables de autenticación
@@ -36,6 +36,23 @@ if "productos" not in st.session_state:
 if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
 
+# Función de autenticación
+def autenticar_usuario():
+    if not st.session_state["auth"]:
+        with st.form(key="login_form"):
+            usuario = st.text_input("Usuario")
+            contraseña = st.text_input("Contraseña", type="password")
+            submitted = st.form_submit_button("Iniciar Sesión")
+            
+            if submitted:
+                if usuario == USER and contraseña == PASSWORD:
+                    st.session_state["auth"] = True
+                    st.success("Autenticación exitosa")
+                else:
+                    st.error("Usuario o contraseña incorrectos")
+        return False
+    return True
+
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
     """Permite exportar un DataFrame como archivo CSV."""
@@ -48,6 +65,9 @@ def exportar_csv(df, nombre_archivo):
 
 # Funciones de los módulos
 def gestion_clientes():
+    if not autenticar_usuario():
+        return  # Si no está autenticado, no se permite acceder a los módulos
+
     st.header("Gestión de Clientes")
     
     # Registro de nuevo cliente
@@ -60,9 +80,10 @@ def gestion_clientes():
         if submitted:
             # Generación de ID para el nuevo cliente
             cliente_id = st.session_state["id_cliente"]
-            st.session_state["clientes"] = st.session_state["clientes"].append({
+            nuevo_cliente = pd.DataFrame([{
                 "ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono
-            }, ignore_index=True)
+            }])
+            st.session_state["clientes"] = pd.concat([st.session_state["clientes"], nuevo_cliente], ignore_index=True)
             st.session_state["id_cliente"] += 1  # Incrementar el ID para el siguiente cliente
             st.success(f"Cliente {nombre} registrado correctamente con ID: {cliente_id}.")
     
@@ -82,6 +103,9 @@ def gestion_clientes():
         st.success("Cliente eliminado correctamente.")
 
 def gestion_inventario():
+    if not autenticar_usuario():
+        return  # Si no está autenticado, no se permite acceder a los módulos
+
     st.header("Gestión de Inventario")
     
     # Registro de producto
@@ -94,9 +118,10 @@ def gestion_inventario():
         if submitted:
             # Generación de ID para el nuevo producto
             producto_id = st.session_state["id_producto"]
-            st.session_state["productos"] = st.session_state["productos"].append({
+            nuevo_producto = pd.DataFrame([{
                 "ID": producto_id, "Producto": producto, "Cantidad": cantidad, "Precio Unitario": precio_unitario
-            }, ignore_index=True)
+            }])
+            st.session_state["productos"] = pd.concat([st.session_state["productos"], nuevo_producto], ignore_index=True)
             st.session_state["id_producto"] += 1  # Incrementar el ID para el siguiente producto
             st.success(f"Producto {producto} registrado correctamente con ID: {producto_id}.")
     
@@ -116,6 +141,9 @@ def gestion_inventario():
         st.success("Producto eliminado correctamente.")
 
 def gestion_facturas():
+    if not autenticar_usuario():
+        return  # Si no está autenticado, no se permite acceder a los módulos
+
     st.header("Generar Factura")
     st.write("Selecciona un cliente y productos para crear una factura.")
 
@@ -156,6 +184,9 @@ def gestion_facturas():
     exportar_csv(st.session_state["facturas"], "facturas.csv")
 
 def analisis_ventas():
+    if not autenticar_usuario():
+        return  # Si no está autenticado, no se permite acceder a los módulos
+
     st.header("Análisis de Ventas")
     if st.session_state["facturas"].empty:
         st.warning("No hay ventas registradas.")
@@ -167,60 +198,28 @@ def analisis_ventas():
         total_ventas = st.session_state["facturas"]["Total"].sum()
         st.write(f"**Total de Ventas: ${total_ventas:,.2f}**")
         
-        # Reporte de IVA
-        total_iva = st.session_state["facturas"]["IVA"].sum()
-        st.write(f"**IVA Total: ${total_iva:,.2f}**")
+        # Reporte de ventas por cliente
+        ventas_por_cliente = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum()
+        st.write("**Ventas por Cliente:**")
+        st.dataframe(ventas_por_cliente)
 
 def gestion_reportes():
+    if not autenticar_usuario():
+        return  # Si no está autenticado, no se permite acceder a los módulos
+
     st.header("Generación de Reportes Contables")
-    if st.session_state["facturas"].empty:
-        st.warning("No hay ventas registradas.")
-    else:
-        st.subheader("Reporte de Ventas")
-        st.write("Generación de reporte contable de todas las ventas realizadas.")
+    if st.button("Generar Reporte Contable"):
+        # Generación de un reporte simple en PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Reporte Contable", ln=True, align="C")
+        pdf.ln(10)
         
-        # Reporte en formato PDF
-        if st.button("Generar Reporte Contable PDF"):
-            pdf = FPDF()
-            pdf.set_auto_page_break(auto=True, margin=15)
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Reporte Contable de Ventas", ln=True, align="C")
-            
-            for _, factura in st.session_state["facturas"].iterrows():
-                pdf.cell(200, 10, f"Factura ID: {factura['Factura ID']} - Cliente: {factura['Cliente Nombre']}", ln=True)
-                pdf.cell(200, 10, f"Total: ${factura['Total']:.2f} - IVA: ${factura['IVA']:.2f}", ln=True)
-                pdf.cell(200, 10, f"Fecha: {factura['Fecha']}", ln=True)
-                pdf.ln(10)
-            
-            # Guardar PDF en disco
-            with open("/mnt/data/reporte_ventas.pdf", "wb") as f:
-                f.write(pdf.output(dest="S").encode("latin1"))
-            
-            st.download_button(
-                label="Descargar Reporte en PDF",
-                data=open("/mnt/data/reporte_ventas.pdf", "rb").read(),
-                file_name="reporte_ventas.pdf",
-                mime="application/pdf"
-            )
-
-# Menú de navegación
-modulo = st.sidebar.radio("Selecciona el módulo", [
-    "Gestión de Clientes", 
-    "Gestión de Inventario", 
-    "Generar Factura", 
-    "Análisis de Ventas",
-    "Generación de Reportes Contables"
-])
-
-# Ejecutar función basada en la opción seleccionada
-if modulo == "Gestión de Clientes":
-    gestion_clientes()
-elif modulo == "Gestión de Inventario":
-    gestion_inventario()
-elif modulo == "Generar Factura":
-    gestion_facturas()
-elif modulo == "Análisis de Ventas":
-    analisis_ventas()
-else:
-    gestion_reportes()
+        # Exportar el reporte
+        st.download_button(
+            label="Descargar Reporte Contable",
+            data=pdf.output(dest="S").encode("latin1"),
+            file_name="reporte_contable.pdf",
+            mime="application/pdf"
+        )
