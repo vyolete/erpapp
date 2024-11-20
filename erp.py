@@ -172,47 +172,58 @@ def gestion_facturas():
     productos_seleccionados = st.multiselect("Selecciona productos", st.session_state["productos"]["Producto"].values)
     productos_detalle = []
     total = 0
-    iva = 0
-    
+
     for producto in productos_seleccionados:
-        cantidad = st.number_input(f"Cantidad de {producto}", min_value=0, step=1)
-        if cantidad > 0:
-            producto_data = st.session_state["productos"][st.session_state["productos"]["Producto"] == producto]
-            precio_unitario = producto_data["Precio Unitario"].values[0]
-            total += precio_unitario * cantidad
-            productos_detalle.append(f"{producto} x{cantidad}")
+        cantidad = st.number_input(f"Cantidad de {producto}", min_value=1, step=1)
+        producto_info = st.session_state["productos"][st.session_state["productos"]["Producto"] == producto]
+        precio_unitario = producto_info["Precio Unitario"].values[0]
+        total += precio_unitario * cantidad
+        productos_detalle.append((producto, cantidad, precio_unitario))
     
-    iva = total * 0.16  # IVA del 16%
+    iva = total * 0.19
     total_con_iva = total + iva
 
+    # Botón de generar factura
     if st.button("Generar Factura"):
         factura_id = st.session_state["id_factura"]
+        fecha = pd.to_datetime("today").strftime("%Y-%m-%d")
         factura = pd.DataFrame([{
-            "Factura ID": factura_id,
-            "Cliente ID": cliente_id,
-            "Cliente Nombre": cliente_nombre,
-            "Productos": ", ".join(productos_detalle),
-            "Total": total_con_iva,
-            "IVA": iva,
-            "Fecha": pd.Timestamp.now()
+            "Factura ID": factura_id, "Cliente ID": cliente_id, "Cliente Nombre": cliente_nombre,
+            "Productos": productos_detalle, "Total": total, "IVA": iva, "Fecha": fecha
         }])
         st.session_state["facturas"] = pd.concat([st.session_state["facturas"], factura], ignore_index=True)
-        st.session_state["id_factura"] += 1  # Incrementar ID de factura
-        st.success(f"Factura generada con ID: {factura_id}")
-        st.dataframe(factura)
+        st.session_state["id_factura"] += 1  # Incrementar el ID para la siguiente factura
 
-# Menú de navegación y ejecución de módulos
-if st.session_state["auth"]:
-    menu = ["Gestión de Clientes", "Gestión de Inventario", "Generación de Factura", "Reportes Contables"]
-    opcion = st.sidebar.selectbox("Selecciona un módulo", menu)
+        st.success(f"Factura {factura_id} generada correctamente.")
+        st.write(f"Total: {total_con_iva}")
 
-    if opcion == "Gestión de Clientes":
-        gestion_clientes()
-    elif opcion == "Gestión de Inventario":
-        gestion_inventario()
-    elif opcion == "Generación de Factura":
-        gestion_facturas()
-    elif opcion == "Reportes Contables":
-        gestion_reportes()
-else:
-    st.warning("Por favor, inicie sesión para acceder a las funcionalidades del sistema.")
+        # Exportar la factura
+        exportar_csv(st.session_state["facturas"], "facturas.csv")
+
+def gestion_reportes():
+    if not autenticar_usuario():
+        return
+
+    st.header("Generar Reportes")
+
+    # Generación de reportes contables
+    st.write("Aquí pueden ir los reportes contables.")
+    st.write("Funciones específicas para reportes como ingresos, gastos y balances se agregarán aquí.")
+    
+    # Simulando el reporte básico
+    st.text_area("Resumen", "Reporte generado: ingresos, gastos, balance general, etc.")
+    
+    # Exportar el reporte a CSV
+    exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
+
+# Menú de navegación
+modulo_seleccionado = st.sidebar.selectbox("Selecciona el módulo", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes"])
+
+if modulo_seleccionado == "Gestión de Clientes":
+    gestion_clientes()
+elif modulo_seleccionado == "Gestión de Inventario":
+    gestion_inventario()
+elif modulo_seleccionado == "Generar Factura":
+    gestion_facturas()
+elif modulo_seleccionado == "Generar Reportes":
+    gestion_reportes()
