@@ -7,45 +7,114 @@ Original file is located at
     https://colab.research.google.com/drive/1y-nGvygsoXRevKgSOIlXcfr_o2QJTuwN
 """
 
+%%writefile erp_streamlit.py
+
 import streamlit as st
+import pandas as pd
 
 # Configuración inicial
-st.set_page_config(page_title="ERP Básico", layout="wide")
+st.set_page_config(page_title="ERP Avanzado", layout="wide")
+
+# Variables globales
+if "clientes" not in st.session_state:
+    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+
+if "facturas" not in st.session_state:
+    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Producto", "Cantidad", "Precio Unitario", "Total"])
+
+if "comisiones" not in st.session_state:
+    st.session_state["comisiones"] = pd.DataFrame(columns=["Empleado", "Ventas Totales", "Comisión Ganada"])
 
 # Barra lateral para la navegación
 st.sidebar.title("Módulos del ERP")
-module = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Inventarios", "Gestión de Nómina", "Reportes de Ventas"])
+module = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Facturas", "Gestión de Nómina"])
 
 # Funciones de cada módulo
-def gestion_inventarios():
-    st.header("Gestión de Inventarios")
-    st.write("Aquí puedes administrar los productos del inventario.")
-    # Ejemplo: Mostrar una tabla básica
-    productos = {"Producto": ["Laptop", "Teclado", "Mouse"],
-                 "Cantidad": [10, 50, 100],
-                 "Precio Unitario": [1000, 20, 10]}
-    st.table(productos)
+def gestion_clientes():
+    st.header("Gestión de Clientes")
+    with st.form("Registro de Cliente"):
+        st.subheader("Registrar Cliente")
+        cliente_id = st.text_input("ID del Cliente")
+        nombre = st.text_input("Nombre del Cliente")
+        correo = st.text_input("Correo Electrónico")
+        telefono = st.text_input("Teléfono")
+        submitted = st.form_submit_button("Registrar")
+        
+        if submitted:
+            if cliente_id and nombre and correo:
+                nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
+                st.session_state["clientes"] = pd.concat(
+                    [st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True
+                )
+                st.success("Cliente registrado exitosamente.")
+            else:
+                st.error("Por favor, completa todos los campos obligatorios.")
+    
+    # Mostrar tabla de clientes
+    st.subheader("Clientes Registrados")
+    st.dataframe(st.session_state["clientes"])
+
+def gestion_facturas():
+    st.header("Gestión de Facturas")
+    
+    if st.session_state["clientes"].empty:
+        st.warning("No hay clientes registrados. Por favor, registra clientes primero.")
+        return
+    
+    with st.form("Registro de Factura"):
+        st.subheader("Registrar Venta")
+        cliente_id = st.selectbox("Selecciona Cliente ID", st.session_state["clientes"]["ID"])
+        cliente_nombre = st.session_state["clientes"].loc[
+            st.session_state["clientes"]["ID"] == cliente_id, "Nombre"
+        ].values[0]
+        producto = st.text_input("Producto")
+        cantidad = st.number_input("Cantidad", min_value=1, step=1)
+        precio_unitario = st.number_input("Precio Unitario", min_value=0.0, step=0.1)
+        submitted = st.form_submit_button("Registrar Factura")
+        
+        if submitted:
+            total = cantidad * precio_unitario
+            nueva_factura = {
+                "Factura ID": len(st.session_state["facturas"]) + 1,
+                "Cliente ID": cliente_id,
+                "Cliente Nombre": cliente_nombre,
+                "Producto": producto,
+                "Cantidad": cantidad,
+                "Precio Unitario": precio_unitario,
+                "Total": total
+            }
+            st.session_state["facturas"] = pd.concat(
+                [st.session_state["facturas"], pd.DataFrame([nueva_factura])], ignore_index=True
+            )
+            st.success(f"Factura registrada con éxito para {cliente_nombre}.")
+    
+    # Mostrar facturas registradas
+    st.subheader("Facturas Registradas")
+    st.dataframe(st.session_state["facturas"])
 
 def gestion_nomina():
     st.header("Gestión de Nómina")
-    st.write("Aquí puedes administrar los salarios de los empleados.")
-    # Ejemplo: Captura de datos
-    empleados = st.text_area("Ingresa la lista de empleados (nombre, salario):")
-    if empleados:
-        st.write("Datos capturados:")
-        st.write(empleados)
-
-def reportes_ventas():
-    st.header("Reportes de Ventas")
-    st.write("Aquí puedes visualizar los reportes de ventas.")
-    # Ejemplo: Gráfico de ventas
-    ventas = {"Mes": ["Enero", "Febrero", "Marzo"], "Ventas ($)": [5000, 7000, 8000]}
-    st.bar_chart(data=ventas, x="Mes", y="Ventas ($)")
+    comision_rate = st.slider("Porcentaje de Comisión (%)", min_value=1, max_value=50, value=10)
+    
+    if st.session_state["facturas"].empty:
+        st.warning("No hay facturas registradas. Por favor, registra ventas primero.")
+        return
+    
+    # Calcular comisiones
+    empleados = ["Empleado A", "Empleado B", "Empleado C"]
+    ventas_totales = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum()
+    comisiones = [{"Empleado": empleado, "Ventas Totales": ventas_totales.sum(), 
+                   "Comisión Ganada": ventas_totales.sum() * comision_rate / 100} for empleado in empleados]
+    st.session_state["comisiones"] = pd.DataFrame(comisiones)
+    
+    # Mostrar tabla de comisiones
+    st.subheader("Comisiones Calculadas")
+    st.dataframe(st.session_state["comisiones"])
 
 # Navegar entre los módulos
-if module == "Gestión de Inventarios":
-    gestion_inventarios()
+if module == "Gestión de Clientes":
+    gestion_clientes()
+elif module == "Gestión de Facturas":
+    gestion_facturas()
 elif module == "Gestión de Nómina":
     gestion_nomina()
-elif module == "Reportes de Ventas":
-    reportes_ventas()
