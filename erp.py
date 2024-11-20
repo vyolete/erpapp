@@ -96,6 +96,24 @@ def gestion_clientes():
     else:
         st.dataframe(st.session_state["clientes"])
 
+    # Edición de cliente
+    cliente_a_editar = st.selectbox("Seleccionar cliente para editar", st.session_state["clientes"]["ID"])
+    cliente_data = st.session_state["clientes"][st.session_state["clientes"]["ID"] == cliente_a_editar]
+    if cliente_data.empty:
+        st.warning("Cliente no encontrado.")
+    else:
+        with st.form("Editar Cliente"):
+            nombre_edit = st.text_input("Nuevo Nombre", cliente_data["Nombre"].values[0])
+            correo_edit = st.text_input("Nuevo Correo", cliente_data["Correo"].values[0])
+            telefono_edit = st.text_input("Nuevo Teléfono", cliente_data["Teléfono"].values[0])
+            submitted_edit = st.form_submit_button("Actualizar Cliente")
+            
+            if submitted_edit:
+                st.session_state["clientes"].loc[st.session_state["clientes"]["ID"] == cliente_a_editar, "Nombre"] = nombre_edit
+                st.session_state["clientes"].loc[st.session_state["clientes"]["ID"] == cliente_a_editar, "Correo"] = correo_edit
+                st.session_state["clientes"].loc[st.session_state["clientes"]["ID"] == cliente_a_editar, "Teléfono"] = telefono_edit
+                st.success(f"Cliente con ID {cliente_a_editar} actualizado.")
+
     # Eliminación de cliente
     cliente_a_eliminar = st.selectbox("Seleccionar cliente para eliminar", st.session_state["clientes"]["ID"])
     if st.button("Eliminar Cliente"):
@@ -150,109 +168,51 @@ def gestion_facturas():
     cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
     cliente_nombre = st.session_state["clientes"][st.session_state["clientes"]["ID"] == cliente_id]["Nombre"].values[0]
     
-    productos_seleccionados = []
+    # Selección múltiple de productos
+    productos_seleccionados = st.multiselect("Selecciona productos", st.session_state["productos"]["Producto"].values)
+    productos_detalle = []
     total = 0
     iva = 0
     
-    for producto in st.session_state["productos"]["Producto"]:
+    for producto in productos_seleccionados:
         cantidad = st.number_input(f"Cantidad de {producto}", min_value=0, step=1)
         if cantidad > 0:
             producto_data = st.session_state["productos"][st.session_state["productos"]["Producto"] == producto]
             precio_unitario = producto_data["Precio Unitario"].values[0]
-            total += cantidad * precio_unitario
-            productos_seleccionados.append((producto, cantidad, precio_unitario))
+            total += precio_unitario * cantidad
+            productos_detalle.append(f"{producto} x{cantidad}")
     
-    iva = total * 0.16
+    iva = total * 0.16  # IVA del 16%
     total_con_iva = total + iva
-    
+
     if st.button("Generar Factura"):
-        # Generación de ID para la nueva factura
         factura_id = st.session_state["id_factura"]
-        st.session_state["facturas"] = st.session_state["facturas"].append({
+        factura = pd.DataFrame([{
             "Factura ID": factura_id,
             "Cliente ID": cliente_id,
             "Cliente Nombre": cliente_nombre,
-            "Productos": productos_seleccionados,
+            "Productos": ", ".join(productos_detalle),
             "Total": total_con_iva,
             "IVA": iva,
-            "Fecha": pd.Timestamp.now().strftime('%Y-%m-%d')
-        }, ignore_index=True)
-        st.session_state["id_factura"] += 1  # Incrementar el ID para la siguiente factura
-        st.success(f"Factura {factura_id} generada correctamente.")
-    
-    st.dataframe(st.session_state["facturas"])
-    exportar_csv(st.session_state["facturas"], "facturas.csv")
+            "Fecha": pd.Timestamp.now()
+        }])
+        st.session_state["facturas"] = pd.concat([st.session_state["facturas"], factura], ignore_index=True)
+        st.session_state["id_factura"] += 1  # Incrementar ID de factura
+        st.success(f"Factura generada con ID: {factura_id}")
+        st.dataframe(factura)
 
-def analisis_ventas():
-    if not autenticar_usuario():
-        return  # Si no está autenticado, no se permite acceder a los módulos
+# Menú de navegación y ejecución de módulos
+if st.session_state["auth"]:
+    menu = ["Gestión de Clientes", "Gestión de Inventario", "Generación de Factura", "Reportes Contables"]
+    opcion = st.sidebar.selectbox("Selecciona un módulo", menu)
 
-    st.header("Análisis de Ventas")
-    if st.session_state["facturas"].empty:
-        st.warning("No hay ventas registradas.")
-    else:
-        st.subheader("Ventas Realizadas")
-        st.dataframe(st.session_state["facturas"])
-        
-        # Total de ventas
-        total_ventas = st.session_state["facturas"]["Total"].sum()
-        st.write(f"**Total de Ventas: ${total_ventas:,.2f}**")
-        
-        # Reporte de ventas por cliente
-        ventas_por_cliente = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum()
-        st.write("**Ventas por Cliente:**")
-        st.dataframe(ventas_por_cliente)
-
-def gestion_reportes():
-    st.header("Generación de Reportes Contables")
-    if st.session_state["facturas"].empty:
-        st.warning("No hay ventas registradas.")
-    else:
-        st.subheader("Reporte de Ventas")
-        st.write("Generación de reporte contable de todas las ventas realizadas.")
-        
-        # Reporte en formato PDF
-        if st.button("Generar Reporte Contable PDF"):
-            pdf = FPDF()
-            pdf.set_auto_page_break(auto=True, margin=15)
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Reporte Contable de Ventas", ln=True, align="C")
-            
-            for _, factura in st.session_state["facturas"].iterrows():
-                pdf.cell(200, 10, f"Factura ID: {factura['Factura ID']} - Cliente: {factura['Cliente Nombre']}", ln=True)
-                pdf.cell(200, 10, f"Total: ${factura['Total']:.2f} - IVA: ${factura['IVA']:.2f}", ln=True)
-                pdf.cell(200, 10, f"Fecha: {factura['Fecha']}", ln=True)
-                pdf.ln(10)
-            
-            # Guardar PDF en disco
-            with open("/mnt/data/reporte_ventas.pdf", "wb") as f:
-                f.write(pdf.output(dest="S").encode("latin1"))
-            
-            st.download_button(
-                label="Descargar Reporte en PDF",
-                data=open("/mnt/data/reporte_ventas.pdf", "rb").read(),
-                file_name="reporte_ventas.pdf",
-                mime="application/pdf"
-            )
-
-# Menú de navegación
-modulo = st.sidebar.radio("Selecciona el módulo", [
-    "Gestión de Clientes", 
-    "Gestión de Inventario", 
-    "Generar Factura", 
-    "Análisis de Ventas",
-    "Generación de Reportes Contables"
-])
-
-# Ejecutar función basada en la opción seleccionada
-if modulo == "Gestión de Clientes":
-    gestion_clientes()
-elif modulo == "Gestión de Inventario":
-    gestion_inventario()
-elif modulo == "Generar Factura":
-    gestion_facturas()
-elif modulo == "Análisis de Ventas":
-    analisis_ventas()
+    if opcion == "Gestión de Clientes":
+        gestion_clientes()
+    elif opcion == "Gestión de Inventario":
+        gestion_inventario()
+    elif opcion == "Generación de Factura":
+        gestion_facturas()
+    elif opcion == "Reportes Contables":
+        gestion_reportes()
 else:
-    gestion_reportes()
+    st.warning("Por favor, inicie sesión para acceder a las funcionalidades del sistema.")
