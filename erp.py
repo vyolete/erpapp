@@ -182,4 +182,25 @@ def barra_lateral():
                     st.session_state["auth"] = True
                     st.experimental_rerun()  # Refrescar la app para mostrar los módulos
                 else:
-                    st
+                    st.error("Credenciales incorrectas.")
+        else:
+            st.subheader("Seleccione un Módulo")
+            st.session_state["modulo"] = st.selectbox("Módulo", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Análisis de Ventas", "Generar Reporte Contable"])
+            
+            if st.session_state["modulo"] == "Gestión de Clientes":
+                gestion_clientes()
+            elif st.session_state["modulo"] == "Gestión de Inventario":
+                gestion_inventario()
+            elif st.session_state["modulo"] == "Generar Factura":
+                gestion_facturas()
+            elif st.session_state["modulo"] == "Análisis de Ventas":
+                analisis_ventas()
+            elif st.session_state["modulo"] == "Generar Reporte Contable":
+                gestion_reportes()
+
+# Función principal
+def main():
+    barra_lateral()
+
+if __name__ == "__main__":
+    main()
