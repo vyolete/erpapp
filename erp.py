@@ -30,6 +30,15 @@ if "id_producto" not in st.session_state:
 if "id_factura" not in st.session_state:
     st.session_state["id_factura"] = 1  # El primer ID de factura
 
+# Inicialización de DataFrames
+if "clientes" not in st.session_state:
+    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+
+if "productos" not in st.session_state:
+    st.session_state["productos"] = pd.DataFrame(columns=["ID", "Producto", "Cantidad", "Precio Unitario"])
+
+if "facturas" not in st.session_state:
+    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
 # Función de autenticación
 with st.sidebar:
     st.title("ERP con Autenticación")
@@ -61,9 +70,6 @@ def exportar_csv(df, nombre_archivo):
 
 # Funciones de los módulos
 def gestion_clientes():
-    if not autenticar_usuario():
-        return  # Si no está autenticado, no se permite acceder a los módulos
-
     st.header("Gestión de Clientes")
     
     # Registro de nuevo cliente
@@ -117,8 +123,6 @@ def gestion_clientes():
         st.success("Cliente eliminado correctamente.")
 
 def gestion_inventario():
-    if not autenticar_usuario():
-        return  # Si no está autenticado, no se permite acceder a los módulos
 
     st.header("Gestión de Inventario")
     
@@ -155,8 +159,7 @@ def gestion_inventario():
         st.success("Producto eliminado correctamente.")
 
 def gestion_facturas():
-    if not autenticar_usuario():
-        return  # Si no está autenticado, no se permite acceder a los módulos
+
 
     st.header("Generar Factura")
     st.write("Selecciona un cliente y productos para crear una factura.")
@@ -197,8 +200,7 @@ def gestion_facturas():
         exportar_csv(st.session_state["facturas"], "facturas.csv")
 
 def gestion_reportes():
-    if not autenticar_usuario():
-        return
+ 
 
     st.header("Generar Reportes")
 
