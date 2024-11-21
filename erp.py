@@ -1,4 +1,4 @@
-%%writefile erp_streamlit.py
+#%%writefile erp_streamlit.py
 
 import streamlit as st
 import pandas as pd
