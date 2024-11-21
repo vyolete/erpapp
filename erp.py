@@ -54,7 +54,7 @@ with st.sidebar:
             else:
                 st.error("Usuario o contraseña incorrectos.")
     else:
-        modulo = st.radio("Módulos:", [
+        modulo_seleccionado = st.radio("Módulos:", [
             "Gestión de Clientes", 
             "Gestión de Inventario", 
             "Gestión de Facturas", 
