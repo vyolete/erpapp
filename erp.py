@@ -12,7 +12,7 @@ empresa_nombre = "Mi Empresa ERP"
 # Variables de autenticación
 USER = "Lira"
 PASSWORD = "Lir@1120"
-
+st.sidebar.title("Módulos del ERP")
 # Inicialización de variables globales
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
@@ -159,8 +159,6 @@ def gestion_inventario():
         st.success("Producto eliminado correctamente.")
 
 def gestion_facturas():
-
-
     st.header("Generar Factura")
     st.write("Selecciona un cliente y productos para crear una factura.")
 
@@ -215,7 +213,7 @@ def gestion_reportes():
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
 # Menú de navegación
-st.sidebar.title("Módulos del ERP")
+
 #modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 
 
