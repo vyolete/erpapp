@@ -239,5 +239,5 @@ elif modulo_seleccionado == "Generar Factura":
     gestion_facturas()
 elif modulo_seleccionado == "Generar Reportes":
     gestion_reportes()
-elif module == "Análisis de Ventas":
+elif modulo_seleccionado == "Análisis de Ventas":
     analisis_ventas()
