@@ -79,37 +79,6 @@ def gestion_clientes():
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
-    # Verificar si hay clientes registrados
-    if len(st.session_state["clientes"]) > 0:
-        # Número de Cliente a buscar, eliminar o actualizar
-        cliente_id = st.number_input("ID del Cliente", min_value=1, max_value=len(st.session_state["clientes"]))
-
-        # Botón Buscar Cliente
-        if st.button("Buscar Cliente"):
-            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-            st.write(f"Cliente encontrado: {cliente['Nombre']} - {cliente['Correo']} - {cliente['Teléfono']}")
-        
-        # Botón Eliminar Cliente
-        if st.button("Eliminar Cliente"):
-            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_id - 1)
-            st.session_state["clientes"].reset_index(drop=True, inplace=True)
-            st.success(f"Cliente '{cliente['Nombre']}' eliminado correctamente.")
-
-        # Botón Actualizar Cliente
-        if st.button("Actualizar Cliente"):
-            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-            nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
-            correo_actualizado = st.text_input("Nuevo Correo", cliente["Correo"])
-            telefono_actualizado = st.text_input("Nuevo Teléfono", cliente["Teléfono"])
-
-            if st.button("Guardar Cambios"):
-                st.session_state["clientes"].loc[cliente_id - 1, "Nombre"] = nombre_actualizado
-                st.session_state["clientes"].loc[cliente_id - 1, "Correo"] = correo_actualizado
-                st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
-                st.success("Cliente actualizado correctamente.")
-    else:
-        st.warning("No hay clientes registrados para buscar, eliminar o actualizar.")
 
 def gestion_inventario():
     st.header("Gestión de Inventario")
