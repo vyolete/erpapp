@@ -225,7 +225,7 @@ def gestion_facturas():
         })
     
     # Calcular IVA y total final
-    iva = total * 0.19
+    iva = total * 0.16
     total_con_iva = total + iva
     
     # Mostrar resumen
