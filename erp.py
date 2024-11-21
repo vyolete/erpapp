@@ -13,6 +13,7 @@ empresa_nombre = "Mi Empresa ERP"
 # Variables globales
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+    st.session_state["id_cliente"] = 1
 
 if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Producto", "Cantidad", "Precio Unitario", "Total"])
@@ -32,15 +33,6 @@ module = st.sidebar.radio("Selecciona un módulo:", [
     "Gestión de Nómina", 
     "Análisis de Ventas"
 ])
-
-# Funciones de cada módulo
-import streamlit as st
-import pandas as pd
-
-# Inicializar la lista de clientes
-if "clientes" not in st.session_state:
-    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
-    st.session_state["id_cliente"] = 1
 
 # Función para gestionar clientes
 def gestion_clientes():
