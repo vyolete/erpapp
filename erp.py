@@ -34,6 +34,7 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 ])
 
 # Funciones de cada módulo
+# CRUD Clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
@@ -60,19 +61,21 @@ def gestion_clientes():
     st.write(st.session_state["clientes"])
 
     # Actualizar Cliente
-    cliente_id = st.number_input("ID del Cliente a Actualizar", min_value=1, max_value=len(st.session_state["clientes"]))
-    if st.button("Actualizar Cliente"):
-        cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-        nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
-        correo_actualizado = st.text_input("Nuevo Correo", cliente["Correo"])
-        telefono_actualizado = st.text_input("Nuevo Teléfono", cliente["Teléfono"])
+    if len(st.session_state["clientes"]) > 0:
+        cliente_id = st.number_input("ID del Cliente a Actualizar", min_value=1, max_value=len(st.session_state["clientes"]))
+        if st.button("Actualizar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
+            correo_actualizado = st.text_input("Nuevo Correo", cliente["Correo"])
+            telefono_actualizado = st.text_input("Nuevo Teléfono", cliente["Teléfono"])
 
-        if st.button("Guardar Cambios"):
-            st.session_state["clientes"].loc[cliente_id - 1, "Nombre"] = nombre_actualizado
-            st.session_state["clientes"].loc[cliente_id - 1, "Correo"] = correo_actualizado
-            st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
-            st.success("Cliente actualizado correctamente.")
-
+            if st.button("Guardar Cambios"):
+                st.session_state["clientes"].loc[cliente_id - 1, "Nombre"] = nombre_actualizado
+                st.session_state["clientes"].loc[cliente_id - 1, "Correo"] = correo_actualizado
+                st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
+                st.success("Cliente actualizado correctamente.")
+    else:
+        st.warning("No hay clientes registrados para actualizar.")
     # Eliminar Cliente
     cliente_a_eliminar = st.number_input("ID del Cliente a Eliminar", min_value=1, max_value=len(st.session_state["clientes"]))
     if st.button("Eliminar Cliente"):
