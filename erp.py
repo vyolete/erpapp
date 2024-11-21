@@ -38,48 +38,59 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
-    # Crear un formulario para el registro de clientes
-    with st.form("Registro de Cliente"):
-        st.subheader("Registrar Cliente")
+    # Crear Cliente
+    with st.form(key="form_cliente"):
+        cliente_nombre = st.text_input("Nombre del Cliente")
+        cliente_correo = st.text_input("Correo del Cliente")
+        cliente_telefono = st.text_input("Teléfono del Cliente")
+        submit_button = st.form_submit_button(label="Agregar Cliente")
         
-        # Campos de entrada
-        cliente_id = st.text_input("ID del Cliente")
-        nombre = st.text_input("Nombre del Cliente")
-        correo = st.text_input("Correo Electrónico")
-        telefono = st.text_input("Teléfono")
-        
-        # Botón de envío
-        submitted = st.form_submit_button("Registrar")
-        
-        # Si el formulario es enviado
-        if submitted:
-            # Verificamos que los campos obligatorios estén completos
-            if cliente_id and nombre and correo:
-                # Creamos un nuevo cliente
-                nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
-                
-                # Guardamos el nuevo cliente en el estado de sesión
-                st.session_state["clientes"] = pd.concat(
-                    [st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True
-                )
-                
-                # Mostramos un mensaje de éxito
-                st.success("Cliente registrado exitosamente.")
-                
-                # Limpiar los campos para registrar un nuevo cliente
-                cliente_id = ""
-                nombre = ""
-                correo = ""
-                telefono = ""
-                
-            else:
-                # Si los campos obligatorios están vacíos, mostramos un mensaje de error
-                st.error("Por favor, completa todos los campos obligatorios.")
+        if submit_button and cliente_nombre and cliente_correo and cliente_telefono:
+            nuevo_cliente = {
+                "ID": st.session_state["id_cliente"],
+                "Nombre": cliente_nombre,
+                "Correo": cliente_correo,
+                "Teléfono": cliente_telefono
+            }
+            st.session_state["clientes"] = st.session_state["clientes"].append(nuevo_cliente, ignore_index=True)
+            st.session_state["id_cliente"] += 1
+            st.success(f"Cliente '{cliente_nombre}' agregado correctamente.")
     
-    # Mostrar los clientes registrados
+    # Mostrar Clientes
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
 
+    # Verificar si hay clientes registrados
+    if len(st.session_state["clientes"]) > 0:
+        # Número de Cliente a buscar, eliminar o actualizar
+        cliente_id = st.number_input("ID del Cliente", min_value=1, max_value=len(st.session_state["clientes"]))
+
+        # Botón Buscar Cliente
+        if st.button("Buscar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            st.write(f"Cliente encontrado: {cliente['Nombre']} - {cliente['Correo']} - {cliente['Teléfono']}")
+        
+        # Botón Eliminar Cliente
+        if st.button("Eliminar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_id - 1)
+            st.session_state["clientes"].reset_index(drop=True, inplace=True)
+            st.success(f"Cliente '{cliente['Nombre']}' eliminado correctamente.")
+
+        # Botón Actualizar Cliente
+        if st.button("Actualizar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
+            correo_actualizado = st.text_input("Nuevo Correo", cliente["Correo"])
+            telefono_actualizado = st.text_input("Nuevo Teléfono", cliente["Teléfono"])
+
+            if st.button("Guardar Cambios"):
+                st.session_state["clientes"].loc[cliente_id - 1, "Nombre"] = nombre_actualizado
+                st.session_state["clientes"].loc[cliente_id - 1, "Correo"] = correo_actualizado
+                st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
+                st.success("Cliente actualizado correctamente.")
+    else:
+        st.warning("No hay clientes registrados para buscar, eliminar o actualizar.")
 def gestion_inventario():
     st.header("Gestión de Inventario")
     with st.form("Agregar Producto"):
