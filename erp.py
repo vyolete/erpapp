@@ -34,7 +34,15 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 ])
 
 # Funciones de cada módulo
-# CRUD Clientes
+import streamlit as st
+import pandas as pd
+
+# Inicializar la lista de clientes
+if "clientes" not in st.session_state:
+    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+    st.session_state["id_cliente"] = 1
+
+# Función para gestionar clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
@@ -60,9 +68,24 @@ def gestion_clientes():
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
 
-    # Actualizar Cliente
+    # Verificar si hay clientes registrados
     if len(st.session_state["clientes"]) > 0:
-        cliente_id = st.number_input("ID del Cliente a Actualizar", min_value=1, max_value=len(st.session_state["clientes"]))
+        # Número de Cliente a buscar, eliminar o actualizar
+        cliente_id = st.number_input("ID del Cliente", min_value=1, max_value=len(st.session_state["clientes"]))
+
+        # Botón Buscar Cliente
+        if st.button("Buscar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            st.write(f"Cliente encontrado: {cliente['Nombre']} - {cliente['Correo']} - {cliente['Teléfono']}")
+        
+        # Botón Eliminar Cliente
+        if st.button("Eliminar Cliente"):
+            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
+            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_id - 1)
+            st.session_state["clientes"].reset_index(drop=True, inplace=True)
+            st.success(f"Cliente '{cliente['Nombre']}' eliminado correctamente.")
+
+        # Botón Actualizar Cliente
         if st.button("Actualizar Cliente"):
             cliente = st.session_state["clientes"].iloc[cliente_id - 1]
             nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
@@ -75,13 +98,11 @@ def gestion_clientes():
                 st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
                 st.success("Cliente actualizado correctamente.")
     else:
-        st.warning("No hay clientes registrados para actualizar.")
-    # Eliminar Cliente
-    cliente_a_eliminar = st.number_input("ID del Cliente a Eliminar", min_value=1, max_value=len(st.session_state["clientes"]))
-    if st.button("Eliminar Cliente"):
-        st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
-        st.session_state["clientes"].reset_index(drop=True, inplace=True)
-        st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
+        st.warning("No hay clientes registrados para buscar, eliminar o actualizar.")
+
+# Llamar a la función
+gestion_clientes()
+
 def gestion_inventario():
     st.header("Gestión de Inventario")
     with st.form("Agregar Producto"):
