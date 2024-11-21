@@ -231,14 +231,21 @@ def analisis_ventas():
         st.warning("No hay datos de ventas disponibles.")
         return
     
-    st.subheader("Productos Más Vendidos")
-    productos_vendidos = st.session_state["facturas"].groupby("Producto")["Cantidad"].sum().sort_values(ascending=False)
-    st.bar_chart(productos_vendidos)
+    # Productos más vendidos
+    productos_vendidos = []
+    for factura in st.session_state["facturas"]["Productos"]:
+        for producto in factura:
+            productos_vendidos.append(producto[0])  # Producto es el primer elemento de la tupla
     
-    st.subheader("Clientes con Más Ventas")
-    clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
-    st.bar_chart(clientes_ventas)
+    productos_vendidos_df = pd.Series(productos_vendidos).value_counts()
+    st.subheader("Productos Más Vendidos")
+    st.bar_chart(productos_vendidos_df)
 
+    # Clientes con más ventas
+    clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
+    st.subheader("Clientes con Más Ventas")
+    st.bar_chart(clientes_ventas)
+    
 # Navegación entre módulos
 if st.session_state["auth"]:
     if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
