@@ -37,7 +37,7 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 # Función para gestionar clientes
 
 def gestion_clientes():
-    st.header("Gestión de Clientes")
+ st.header("Gestión de Clientes")
     
     # Crear un formulario para el registro de clientes
     with st.form("Registro de Cliente"):
@@ -49,7 +49,7 @@ def gestion_clientes():
         correo = st.text_input("Correo Electrónico", value=st.session_state["correo"], key="correo")
         telefono = st.text_input("Teléfono", value=st.session_state["telefono"], key="telefono")
         
-        # Botón de envío
+        # Asegúrate de incluir el botón de envío
         submitted = st.form_submit_button("Registrar")
         
         # Si el formulario es enviado
