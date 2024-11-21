@@ -13,8 +13,6 @@ empresa_nombre = "Mi Empresa ERP"
 USER = "Lira"
 PASSWORD = "Lir@1120"
 
-
-
 # Inicialización de variables globales
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
@@ -43,21 +41,28 @@ if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
 
 # Función de autenticación
-def autenticar_usuario():
+with st.sidebar:
+    st.title("ERP con Autenticación")
     if not st.session_state["auth"]:
-        with st.form(key="login_form"):
-            usuario = st.text_input("Usuario")
-            contraseña = st.text_input("Contraseña", type="password")
-            submitted = st.form_submit_button("Iniciar Sesión")
-            
-            if submitted:
-                if usuario == USER and contraseña == PASSWORD:
-                    st.session_state["auth"] = True
-                    st.success("Autenticación exitosa")
-                else:
-                    st.error("Usuario o contraseña incorrectos")
-        return False
-    return True
+        st.subheader("Iniciar Sesión")
+        usuario = st.text_input("Usuario")
+        contraseña = st.text_input("Contraseña", type="password")
+        if st.button("Ingresar"):
+            if usuario == USER and contraseña == PASSWORD:
+                st.session_state["auth"] = True
+                st.success("Inicio de sesión exitoso.")
+            else:
+                st.error("Usuario o contraseña incorrectos.")
+    else:
+        modulo = st.radio("Módulos:", [
+            "Gestión de Clientes", 
+            "Gestión de Inventario", 
+            "Gestión de Facturas", 
+            "Gestión de Reportes"
+        ])
+        if st.button("Cerrar Sesión"):
+            st.session_state["auth"] = False
+            st.success("Sesión cerrada correctamente.")
 
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
