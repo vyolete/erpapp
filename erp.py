@@ -34,7 +34,6 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 ])
 
 # Funciones de cada módulo
-# CRUD Clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
@@ -77,14 +76,9 @@ def gestion_clientes():
     # Eliminar Cliente
     cliente_a_eliminar = st.number_input("ID del Cliente a Eliminar", min_value=1, max_value=len(st.session_state["clientes"]))
     if st.button("Eliminar Cliente"):
-        if cliente_a_eliminar <= len(st.session_state["clientes"]):
-            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
-            st.session_state["clientes"].reset_index(drop=True, inplace=True)
-            st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
-        else:
-            st.error("ID de cliente no válido.")
-
-
+        st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
+        st.session_state["clientes"].reset_index(drop=True, inplace=True)
+        st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
 def gestion_inventario():
     st.header("Gestión de Inventario")
     with st.form("Agregar Producto"):
