@@ -291,32 +291,49 @@ def analisis_ventas():
         st.warning("No hay datos de facturas para analizar.")
         return
 
-    # Verificar si las columnas requeridas están presentes
-    required_columns = {"Producto", "Cantidad"}
-    if not required_columns.issubset(st.session_state["facturas"].columns):
-        st.error(f"Las columnas necesarias no están presentes: {required_columns}")
-        return
-
-    # Agrupar y ordenar los productos por cantidad vendida
-    productos_vendidos = (
-        st.session_state["facturas"]
-        .groupby("Producto")["Cantidad"]
-        .sum()
-        .sort_values(ascending=False)
-    )
+    # Desglosar los productos de las facturas
+    productos_list = []
+    for _, factura in st.session_state["facturas"].iterrows():
+        for producto in factura["Productos"]:  # Iterar por cada producto en la lista de productos
+            productos_list.append({
+                "Producto": producto["Producto"],
+                "Cantidad": producto["Cantidad"],
+                "Subtotal": producto["Subtotal"]
+            })
     
-    # Mostrar los datos en una tabla
-    st.subheader("Productos más vendidos")
-    st.dataframe(productos_vendidos)
+    # Crear un DataFrame con los productos
+    productos_df = pd.DataFrame(productos_list)
 
-    # Crear un gráfico de barras para visualizar los productos más vendidos
-    st.subheader("Gráfico de Productos Más Vendidos")
-    fig, ax = plt.subplots()
-    productos_vendidos.plot(kind='bar', color='skyblue', ax=ax)
-    ax.set_title("Productos Más Vendidos")
-    ax.set_xlabel("Producto")
-    ax.set_ylabel("Cantidad Vendida")
-    plt.xticks(rotation=45, ha='right')
+    # Agrupar por producto para sumar cantidades y subtotales
+    resumen_ventas = productos_df.groupby("Producto").agg(
+        Total_Cantidad=("Cantidad", "sum"),
+        Total_Ventas=("Subtotal", "sum")
+    ).reset_index()
+
+    # Mostrar el análisis en la aplicación
+    st.subheader("Resumen de Ventas por Producto")
+    st.dataframe(resumen_ventas)
+
+    # Visualización gráfica
+    st.subheader("Gráficos de Ventas")
+    fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+    
+    # Gráfico de barras de cantidades
+    resumen_ventas.plot.bar(
+        x="Producto", y="Total_Cantidad", ax=ax[0], legend=False, color="skyblue"
+    )
+    ax[0].set_title("Total de Cantidades Vendidas")
+    ax[0].set_ylabel("Cantidad")
+    ax[0].set_xlabel("Producto")
+
+    # Gráfico de barras de ventas
+    resumen_ventas.plot.bar(
+        x="Producto", y="Total_Ventas", ax=ax[1], legend=False, color="orange"
+    )
+    ax[1].set_title("Total de Ventas")
+    ax[1].set_ylabel("Ventas ($)")
+    ax[1].set_xlabel("Producto")
+
     st.pyplot(fig)
 
 
