@@ -36,8 +36,26 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 
 # Función para gestionar clientes
 
+import streamlit as st
+import pandas as pd
+
+# Inicializar la lista de clientes si no existe en session_state
+if "clientes" not in st.session_state:
+    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+
+# Inicializar las claves del formulario si no están definidas
+if "cliente_id" not in st.session_state:
+    st.session_state["cliente_id"] = ""
+if "nombre" not in st.session_state:
+    st.session_state["nombre"] = ""
+if "correo" not in st.session_state:
+    st.session_state["correo"] = ""
+if "telefono" not in st.session_state:
+    st.session_state["telefono"] = ""
+
+# Función para gestionar clientes
 def gestion_clientes():
- st.header("Gestión de Clientes")
+    st.header("Gestión de Clientes")
     
     # Crear un formulario para el registro de clientes
     with st.form("Registro de Cliente"):
@@ -79,6 +97,7 @@ def gestion_clientes():
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
+
     # Verificar si hay clientes registrados
     if len(st.session_state["clientes"]) > 0:
         # Número de Cliente a buscar, eliminar o actualizar
