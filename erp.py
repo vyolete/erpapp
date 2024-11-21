@@ -55,6 +55,15 @@ def gestion_clientes():
             st.session_state["clientes"] = st.session_state["clientes"].append(nuevo_cliente, ignore_index=True)
             st.session_state["id_cliente"] += 1
             st.success(f"Cliente '{cliente_nombre}' agregado correctamente.")
+                    # Limpiar los campos para registrar un nuevo cliente
+                cliente_id = ""
+                nombre = ""
+                correo = ""
+                telefono = ""
+                
+            else:
+                # Si los campos obligatorios están vacíos, mostramos un mensaje de error
+                st.error("Por favor, completa todos los campos obligatorios.")
     
     # Mostrar Clientes
     st.subheader("Clientes Registrados")
