@@ -37,28 +37,48 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 # Función para gestionar clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
+    
+    # Crear un formulario para el registro de clientes
     with st.form("Registro de Cliente"):
         st.subheader("Registrar Cliente")
+        
+        # Campos de entrada
         cliente_id = st.text_input("ID del Cliente")
         nombre = st.text_input("Nombre del Cliente")
         correo = st.text_input("Correo Electrónico")
         telefono = st.text_input("Teléfono")
+        
+        # Botón de envío
         submitted = st.form_submit_button("Registrar")
         
+        # Si el formulario es enviado
         if submitted:
+            # Verificamos que los campos obligatorios estén completos
             if cliente_id and nombre and correo:
+                # Creamos un nuevo cliente
                 nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
+                
+                # Guardamos el nuevo cliente en el estado de sesión
                 st.session_state["clientes"] = pd.concat(
                     [st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True
                 )
+                
+                # Mostramos un mensaje de éxito
                 st.success("Cliente registrado exitosamente.")
+                
+                # Limpiar los campos para registrar un nuevo cliente
+                cliente_id = ""
+                nombre = ""
+                correo = ""
+                telefono = ""
+                
             else:
+                # Si los campos obligatorios están vacíos, mostramos un mensaje de error
                 st.error("Por favor, completa todos los campos obligatorios.")
     
-    # Mostrar Clientes
+    # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
-
     # Verificar si hay clientes registrados
     if len(st.session_state["clientes"]) > 0:
         # Número de Cliente a buscar, eliminar o actualizar
