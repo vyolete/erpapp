@@ -35,6 +35,7 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 ])
 
 # Función para gestionar clientes
+
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
@@ -75,9 +76,8 @@ def gestion_clientes():
                 st.session_state["correo"] = ""
                 st.session_state["telefono"] = ""
                 
-            else:
-                # Si los campos obligatorios están vacíos, mostramos un mensaje de error
-                st.error("Por favor, completa todos los campos obligatorios.")
+                # Actualizar la UI para reflejar los cambios
+                st.experimental_rerun()
     
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
