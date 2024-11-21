@@ -1,6 +1,7 @@
 #%%writefile erp_streamlit.py
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from fpdf import FPDF
 
 # Configuración inicial
@@ -283,29 +284,42 @@ def gestion_reportes():
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
 def analisis_ventas():
-    st.title("Análisis de Ventas")
+    st.header("Análisis de Ventas")
     
+    # Verificar si hay datos en las facturas
     if st.session_state["facturas"].empty:
-        st.warning("No hay ventas registradas.")
+        st.warning("No hay datos de facturas para analizar.")
         return
 
-    productos_vendidos = []
-    for factura in st.session_state["facturas"]["Productos"]:
-        for producto in factura:
-            # Validar estructura del producto
-            if isinstance(producto, dict) and "Producto" in producto:
-                productos_vendidos.append(producto["Producto"])
-            else:
-                st.error(f"Error al procesar producto: {producto}")
+    # Verificar si las columnas requeridas están presentes
+    required_columns = {"Producto", "Cantidad"}
+    if not required_columns.issubset(st.session_state["facturas"].columns):
+        st.error(f"Las columnas necesarias no están presentes: {required_columns}")
+        return
+
+    # Agrupar y ordenar los productos por cantidad vendida
+    productos_vendidos = (
+        st.session_state["facturas"]
+        .groupby("Producto")["Cantidad"]
+        .sum()
+        .sort_values(ascending=False)
+    )
     
-    # Crear DataFrame para análisis
-    ventas_df = pd.DataFrame(productos_vendidos, columns=["Producto"])
-    resumen_ventas = ventas_df["Producto"].value_counts().reset_index()
-    resumen_ventas.columns = ["Producto", "Cantidad Vendida"]
-    
-    st.subheader("Resumen de Ventas")
-    st.table(resumen_ventas)
-  
+    # Mostrar los datos en una tabla
+    st.subheader("Productos más vendidos")
+    st.dataframe(productos_vendidos)
+
+    # Crear un gráfico de barras para visualizar los productos más vendidos
+    st.subheader("Gráfico de Productos Más Vendidos")
+    fig, ax = plt.subplots()
+    productos_vendidos.plot(kind='bar', color='skyblue', ax=ax)
+    ax.set_title("Productos Más Vendidos")
+    ax.set_xlabel("Producto")
+    ax.set_ylabel("Cantidad Vendida")
+    plt.xticks(rotation=45, ha='right')
+    st.pyplot(fig)
+
+
 # Navegación entre módulos
 if st.session_state["auth"]:
     if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
