@@ -229,7 +229,7 @@ def gestion_reportes():
 
 # Menú de navegación
 st.sidebar.title("Módulos del ERP")
-modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
+#modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 
 
 if modulo_seleccionado == "Gestión de Clientes":
