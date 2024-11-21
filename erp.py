@@ -83,9 +83,12 @@ def gestion_clientes():
     # Eliminar Cliente
     cliente_a_eliminar = st.number_input("ID del Cliente a Eliminar", min_value=1, max_value=len(st.session_state["clientes"]))
     if st.button("Eliminar Cliente"):
-        st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
-        st.session_state["clientes"].reset_index(drop=True, inplace=True)
-        st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
+        if cliente_a_eliminar <= len(st.session_state["clientes"]):
+            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
+            st.session_state["clientes"].reset_index(drop=True, inplace=True)
+            st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
+        else:
+            st.error("ID de cliente no válido.")
 
 
 # CRUD Productos
@@ -127,9 +130,12 @@ def gestion_productos():
     # Eliminar Producto
     producto_a_eliminar = st.number_input("ID del Producto a Eliminar", min_value=1, max_value=len(st.session_state["productos"]))
     if st.button("Eliminar Producto"):
-        st.session_state["productos"] = st.session_state["productos"].drop(producto_a_eliminar - 1, axis=0)
-        st.session_state["productos"].reset_index(drop=True, inplace=True)
-        st.success(f"Producto con ID {producto_a_eliminar} eliminado.")
+        if producto_a_eliminar <= len(st.session_state["productos"]):
+            st.session_state["productos"] = st.session_state["productos"].drop(producto_a_eliminar - 1, axis=0)
+            st.session_state["productos"].reset_index(drop=True, inplace=True)
+            st.success(f"Producto con ID {producto_a_eliminar} eliminado.")
+        else:
+            st.error("ID de producto no válido.")
 
 
 # CRUD Facturas
