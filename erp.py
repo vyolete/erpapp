@@ -23,7 +23,7 @@ if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
 if "modulo_seleccionado" not in st.session_state:
-    st.session_state["modulo_seleccionado"] = "Gestión de Clientes"
+    st.session_state["modulo_seleccionado"] = None
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
