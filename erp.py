@@ -222,7 +222,7 @@ def gestion_reportes():
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
 # Menú de navegación
-modulo_seleccionado = st.sidebar.selectbox("Selecciona el módulo", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes"])
+module = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 
 if modulo_seleccionado == "Gestión de Clientes":
     gestion_clientes()
