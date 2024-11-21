@@ -182,7 +182,7 @@ def gestion_nomina():
     #st.session_state["comisiones"] = pd.DataFrame(comisiones)
     
     #st.subheader("Comisiones Calculadas")
-    3st.dataframe(st.session_state["comisiones"])
+    st.dataframe(st.session_state["comisiones"])
 
 def analisis_ventas():
     st.header("Análisis de Ventas")
