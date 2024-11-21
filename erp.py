@@ -245,7 +245,7 @@ if st.session_state["auth"]:
         gestion_facturas()
     elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
         gestion_reportes()
-    elif st.session_state["modulo_seleccionado"] == ""Análisis de Ventas"":
+    elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
         gestion_reportes()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
