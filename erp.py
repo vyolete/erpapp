@@ -30,16 +30,6 @@ if "id_producto" not in st.session_state:
 if "id_factura" not in st.session_state:
     st.session_state["id_factura"] = 1  # El primer ID de factura
 
-# Inicialización de DataFrames
-if "clientes" not in st.session_state:
-    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
-
-if "productos" not in st.session_state:
-    st.session_state["productos"] = pd.DataFrame(columns=["ID", "Producto", "Cantidad", "Precio Unitario"])
-
-if "facturas" not in st.session_state:
-    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
-
 # Función de autenticación
 with st.sidebar:
     st.title("ERP con Autenticación")
@@ -54,7 +44,7 @@ with st.sidebar:
             else:
                 st.error("Usuario o contraseña incorrectos.")
     else:
-        modulo_seleccionado = st.radio("Módulos:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
+        modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
         if st.button("Cerrar Sesión"):
             st.session_state["auth"] = False
             st.success("Sesión cerrada correctamente.")
