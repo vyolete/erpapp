@@ -283,6 +283,8 @@ def gestion_reportes():
     # Exportar el reporte a CSV
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
+import plotly.express as px
+
 def analisis_ventas():
     st.header("Análisis de Ventas")
     
@@ -291,51 +293,62 @@ def analisis_ventas():
         st.warning("No hay datos de facturas para analizar.")
         return
 
-    # Desglosar los productos de las facturas
-    productos_list = []
-    for _, factura in st.session_state["facturas"].iterrows():
-        for producto in factura["Productos"]:  # Iterar por cada producto en la lista de productos
-            productos_list.append({
+    # Crear una lista para desglosar productos en facturas
+    productos_desglosados = []
+    for _, fila in st.session_state["facturas"].iterrows():
+        for producto in fila["Productos"]:
+            productos_desglosados.append({
                 "Producto": producto["Producto"],
                 "Cantidad": producto["Cantidad"],
-                "Subtotal": producto["Subtotal"]
+                "Subtotal": producto["Subtotal"],
+                "Fecha": fila["Fecha"]
             })
-    
-    # Crear un DataFrame con los productos
-    productos_df = pd.DataFrame(productos_list)
 
-    # Agrupar por producto para sumar cantidades y subtotales
-    resumen_ventas = productos_df.groupby("Producto").agg(
-        Total_Cantidad=("Cantidad", "sum"),
-        Total_Ventas=("Subtotal", "sum")
-    ).reset_index()
+    # Crear un DataFrame con los datos desglosados
+    df_productos = pd.DataFrame(productos_desglosados)
 
-    # Mostrar el análisis en la aplicación
-    st.subheader("Resumen de Ventas por Producto")
-    st.dataframe(resumen_ventas)
+    # Verificar si hay datos en el DataFrame desglosado
+    if df_productos.empty:
+        st.warning("No hay datos suficientes para generar análisis.")
+        return
 
-    # Visualización gráfica
-    st.subheader("Gráficos de Ventas")
-    fig, ax = plt.subplots(1, 2, figsize=(14, 6))
-    
-    # Gráfico de barras de cantidades
-    resumen_ventas.plot.bar(
-        x="Producto", y="Total_Cantidad", ax=ax[0], legend=False, color="skyblue"
+    # Análisis de ventas por producto
+    st.subheader("Ventas por Producto")
+    ventas_por_producto = df_productos.groupby("Producto").sum().reset_index()
+    fig1 = px.bar(
+        ventas_por_producto, 
+        x="Producto", 
+        y="Subtotal", 
+        title="Ingresos por Producto", 
+        labels={"Subtotal": "Ingresos ($)"},
+        text="Subtotal"
     )
-    ax[0].set_title("Total de Cantidades Vendidas")
-    ax[0].set_ylabel("Cantidad")
-    ax[0].set_xlabel("Producto")
+    st.plotly_chart(fig1, use_container_width=True)
 
-    # Gráfico de barras de ventas
-    resumen_ventas.plot.bar(
-        x="Producto", y="Total_Ventas", ax=ax[1], legend=False, color="orange"
+    # Análisis de cantidades vendidas por producto
+    st.subheader("Cantidad Vendida por Producto")
+    fig2 = px.pie(
+        ventas_por_producto, 
+        names="Producto", 
+        values="Cantidad", 
+        title="Distribución de Cantidades Vendidas"
     )
-    ax[1].set_title("Total de Ventas")
-    ax[1].set_ylabel("Ventas ($)")
-    ax[1].set_xlabel("Producto")
+    st.plotly_chart(fig2, use_container_width=True)
 
-    st.pyplot(fig)
+    # Análisis temporal de ventas
+    st.subheader("Ingresos Totales por Fecha")
+    df_productos["Fecha"] = pd.to_datetime(df_productos["Fecha"])
+    ingresos_por_fecha = df_productos.groupby("Fecha").sum().reset_index()
+    fig3 = px.line(
+        ingresos_por_fecha, 
+        x="Fecha", 
+        y="Subtotal", 
+        title="Evolución de Ingresos en el Tiempo",
+        labels={"Subtotal": "Ingresos ($)", "Fecha": "Fecha"}
+    )
+    st.plotly_chart(fig3, use_container_width=True)
 
+    st.success("Gráficos interactivos generados correctamente.")
 
 # Navegación entre módulos
 if st.session_state["auth"]:
