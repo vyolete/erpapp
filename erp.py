@@ -236,14 +236,14 @@ def analisis_ventas():
 
 #modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 
-
-if modulo_seleccionado == "Gestión de Clientes":
-    gestion_clientes()
-elif modulo_seleccionado == "Gestión de Inventario":
-    gestion_inventario()
-elif modulo_seleccionado == "Generar Factura":
-    gestion_facturas()
-elif modulo_seleccionado == "Generar Reportes":
-    gestion_reportes()
-elif modulo_seleccionado == "Análisis de Ventas":
-    analisis_ventas()
+if st.session_state["auth"]:
+    if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
+        gestion_clientes()
+    elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
+        gestion_inventario()
+    elif st.session_state["modulo_seleccionado"] == "Gestión de Facturas":
+        gestion_facturas()
+    elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
+        gestion_reportes()
+else:
+    st.warning("Por favor, inicia sesión para continuar.")
