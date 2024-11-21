@@ -22,8 +22,8 @@ empresa_nombre = "Mi Empresa ERP"
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
-if "modulo" not in st.session_state:
-    st.session_state["modulo"] = "Gestión de Clientes"
+if "modulo_seleccionado" not in st.session_state:
+    st.session_state["modulo_seleccionado"] = "Gestión de Clientes"
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
