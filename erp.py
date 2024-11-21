@@ -46,24 +46,28 @@ if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
     
 # Función de autenticación
-with st.sidebar:
-    st.title("ERP con Autenticación")
-    if not st.session_state["auth"]:
-        st.subheader("Iniciar Sesión")
-        usuario = st.text_input("Usuario")
-        contraseña = st.text_input("Contraseña", type="password")
-        if st.button("Ingresar"):
-            if usuario == USER and contraseña == PASSWORD:
-                st.session_state["auth"] = True
-                st.success("Inicio de sesión exitoso.")
-            else:
-                st.error("Usuario o contraseña incorrectos.")
-    else:
-        modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes","Análisis de Ventas"])
-        if st.button("Cerrar Sesión"):
-            st.session_state["auth"] = False
-            st.success("Sesión cerrada correctamente.")
 
+def barra_lateral():
+    with st.sidebar:
+        st.title("ERP con Autenticación")
+        if not st.session_state["auth"]:
+            st.subheader("Iniciar Sesión")
+            usuario = st.text_input("Usuario")
+            contraseña = st.text_input("Contraseña", type="password")
+            if st.button("Ingresar"):
+                if usuario == USER and contraseña == PASSWORD:
+                    st.session_state["auth"] = True
+                    st.success("Inicio de sesión exitoso.")
+                else:
+                    st.error("Usuario o contraseña incorrectos.")
+        else:
+            st.subheader(f"Bienvenido, {USER}")
+            modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes","Análisis de Ventas"])
+            if st.button("Cerrar Sesión"):
+                st.session_state["auth"] = False
+                st.success("Sesión cerrada correctamente.")
+# Control de navegación
+barra_lateral()
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
     """Permite exportar un DataFrame como archivo CSV."""
