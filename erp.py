@@ -48,29 +48,27 @@ if "facturas" not in st.session_state:
 # Función de autenticación
 with st.sidebar:
     st.title("ERP con Autenticación")
-    if not st.session_state["auth"]:
-        st.subheader("Iniciar Sesión")
-        usuario = st.text_input("Usuario")
-        contraseña = st.text_input("Contraseña", type="password")
-        if st.button("Ingresar"):
-            if usuario == USER and contraseña == PASSWORD:
-                st.session_state["auth"] = True
-                st.success("Inicio de sesión exitoso.")
-            else:
-                st.error("Usuario o contraseña incorrectos.")
-    else:
-        st.subheader(f"Bienvenido, {USER}")
-        st.session_state["modulo_seleccionado"] = st.radio(
-            "Selecciona un módulo:",
-            ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes", "Análisis de Ventas"],
-            index=["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes", "Análisis de Ventas"].index(
-                st.session_state["modulo_seleccionado"]
-            ) if st.session_state["modulo_seleccionado"] else 0,
-        )
-        if st.button("Cerrar Sesión"):
-            st.session_state["auth"] = False
-            st.session_state["modulo_seleccionado"] = None
-            st.success("Sesión cerrada correctamente.")
+if not st.session_state["auth"]:
+    st.sidebar.subheader("Iniciar Sesión")
+    usuario = st.sidebar.text_input("Usuario")
+    contraseña = st.sidebar.text_input("Contraseña", type="password")
+    if st.sidebar.button("Ingresar"):
+        if usuario == USER and contraseña == PASSWORD:
+            st.session_state["auth"] = True
+            st.sidebar.success("Inicio de sesión exitoso.")
+        else:
+            st.sidebar.error("Usuario o contraseña incorrectos.")
+else:
+    st.sidebar.subheader(f"Bienvenido, {USER}")
+    st.session_state["modulo_seleccionado"] = st.sidebar.radio(
+        "Selecciona un módulo:",
+        ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes", "Análisis de Ventas"],
+    )
+    if st.sidebar.button("Cerrar Sesión"):
+        st.session_state["auth"] = False
+        st.session_state["modulo_seleccionado"] = None
+        st.sidebar.success("Sesión cerrada correctamente.")
+
 
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
