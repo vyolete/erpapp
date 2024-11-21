@@ -241,16 +241,16 @@ def barra_lateral():
                 st.success("Sesión cerrada correctamente.")
 # Control de navegación
 barra_lateral()
-if st.session_state["auth"]:
-    if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
-        gestion_clientes()
-    elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
-        gestion_inventario()
-    elif st.session_state["modulo_seleccionado"] == "Gestión de Facturas":
-        gestion_facturas()
-    elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
-        gestion_reportes()
-    elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
-        gestion_reportes()
+
+if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
+    gestion_clientes()
+elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
+    gestion_inventario()
+elif st.session_state["modulo_seleccionado"] == "Gestión de Facturas":
+    gestion_facturas()
+elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
+    gestion_reportes()
+elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
+    gestion_reportes()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
