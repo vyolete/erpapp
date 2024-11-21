@@ -1,195 +1,181 @@
+%%writefile erp_streamlit.py
+
 import streamlit as st
 import pandas as pd
-from fpdf import FPDF
 
 # Configuración inicial
-st.set_page_config(page_title="ERP con Autenticación", layout="wide")
+st.set_page_config(page_title="ERP Completo", layout="wide")
 
-# Variables de autenticación
-USER = "Lira"
-PASSWORD = "Lir@1120"
-
-# Inicialización de session_state
+# Variables globales
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
 
-if "productos" not in st.session_state:
-    st.session_state["productos"] = pd.DataFrame(columns=["ID", "Producto", "Precio Unitario"])
-
 if "facturas" not in st.session_state:
-    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
+    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Producto", "Cantidad", "Precio Unitario", "Total"])
 
-if "id_cliente" not in st.session_state:
-    st.session_state["id_cliente"] = 1
+if "inventario" not in st.session_state:
+    st.session_state["inventario"] = pd.DataFrame(columns=["Producto", "Cantidad", "Precio Unitario"])
 
-if "id_producto" not in st.session_state:
-    st.session_state["id_producto"] = 1
+if "comisiones" not in st.session_state:
+    st.session_state["comisiones"] = pd.DataFrame(columns=["Empleado", "Ventas Totales", "Comisión Ganada"])
 
-if "id_factura" not in st.session_state:
-    st.session_state["id_factura"] = 1
+# Barra lateral para la navegación
+st.sidebar.title("Módulos del ERP")
+module = st.sidebar.radio("Selecciona un módulo:", [
+    "Gestión de Clientes", 
+    "Gestión de Inventario", 
+    "Gestión de Facturas", 
+    "Gestión de Nómina", 
+    "Análisis de Ventas"
+])
 
-
-# Función para exportar a CSV
-def exportar_csv(df, nombre_archivo):
-    df.to_csv(nombre_archivo, index=False)
-    st.download_button(
-        label="Descargar CSV",
-        data=df.to_csv(index=False),
-        file_name=nombre_archivo,
-        mime="text/csv"
-    )
-
-
-# CRUD Clientes
+# Funciones de cada módulo
 def gestion_clientes():
     st.header("Gestión de Clientes")
-    
-    # Crear Cliente
-    with st.form(key="form_cliente"):
-        cliente_nombre = st.text_input("Nombre del Cliente")
-        cliente_correo = st.text_input("Correo del Cliente")
-        cliente_telefono = st.text_input("Teléfono del Cliente")
-        submit_button = st.form_submit_button(label="Agregar Cliente")
+    with st.form("Registro de Cliente"):
+        st.subheader("Registrar Cliente")
+        cliente_id = st.text_input("ID del Cliente")
+        nombre = st.text_input("Nombre del Cliente")
+        correo = st.text_input("Correo Electrónico")
+        telefono = st.text_input("Teléfono")
+        submitted = st.form_submit_button("Registrar")
         
-        if submit_button and cliente_nombre and cliente_correo and cliente_telefono:
-            nuevo_cliente = {
-                "ID": st.session_state["id_cliente"],
-                "Nombre": cliente_nombre,
-                "Correo": cliente_correo,
-                "Teléfono": cliente_telefono
-            }
-            st.session_state["clientes"] = st.session_state["clientes"].append(nuevo_cliente, ignore_index=True)
-            st.session_state["id_cliente"] += 1
-            st.success(f"Cliente '{cliente_nombre}' agregado correctamente.")
+        if submitted:
+            if cliente_id and nombre and correo:
+                nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
+                st.session_state["clientes"] = pd.concat(
+                    [st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True
+                )
+                st.success("Cliente registrado exitosamente.")
+            else:
+                st.error("Por favor, completa todos los campos obligatorios.")
     
-    # Mostrar Clientes
     st.subheader("Clientes Registrados")
-    st.write(st.session_state["clientes"])
+    st.dataframe(st.session_state["clientes"])
 
-    # Actualizar Cliente
-    cliente_id = st.number_input("ID del Cliente a Actualizar", min_value=1, max_value=len(st.session_state["clientes"]))
-    if st.button("Actualizar Cliente"):
-        cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-        nombre_actualizado = st.text_input("Nuevo Nombre", cliente["Nombre"])
-        correo_actualizado = st.text_input("Nuevo Correo", cliente["Correo"])
-        telefono_actualizado = st.text_input("Nuevo Teléfono", cliente["Teléfono"])
-
-        if st.button("Guardar Cambios"):
-            st.session_state["clientes"].loc[cliente_id - 1, "Nombre"] = nombre_actualizado
-            st.session_state["clientes"].loc[cliente_id - 1, "Correo"] = correo_actualizado
-            st.session_state["clientes"].loc[cliente_id - 1, "Teléfono"] = telefono_actualizado
-            st.success("Cliente actualizado correctamente.")
-
-    # Eliminar Cliente
-    cliente_a_eliminar = st.number_input("ID del Cliente a Eliminar", min_value=1, max_value=len(st.session_state["clientes"]))
-    if st.button("Eliminar Cliente"):
-        if cliente_a_eliminar <= len(st.session_state["clientes"]):
-            st.session_state["clientes"] = st.session_state["clientes"].drop(cliente_a_eliminar - 1, axis=0)
-            st.session_state["clientes"].reset_index(drop=True, inplace=True)
-            st.success(f"Cliente con ID {cliente_a_eliminar} eliminado.")
-        else:
-            st.error("ID de cliente no válido.")
-
-
-# CRUD Productos
-def gestion_productos():
-    st.header("Gestión de Productos")
-    
-    # Crear Producto
-    with st.form(key="form_producto"):
-        producto_nombre = st.text_input("Nombre del Producto")
-        precio_unitario = st.number_input("Precio Unitario", min_value=0.0, format="%.2f")
-        submit_button = st.form_submit_button(label="Agregar Producto")
+def gestion_inventario():
+    st.header("Gestión de Inventario")
+    with st.form("Agregar Producto"):
+        st.subheader("Registrar Producto")
+        producto = st.text_input("Nombre del Producto")
+        cantidad = st.number_input("Cantidad", min_value=1, step=1)
+        precio_unitario = st.number_input("Precio Unitario", min_value=0.0, step=0.1)
+        submitted = st.form_submit_button("Agregar al Inventario")
         
-        if submit_button and producto_nombre and precio_unitario > 0:
-            nuevo_producto = {
-                "ID": st.session_state["id_producto"],
-                "Producto": producto_nombre,
-                "Precio Unitario": precio_unitario
-            }
-            st.session_state["productos"] = st.session_state["productos"].append(nuevo_producto, ignore_index=True)
-            st.session_state["id_producto"] += 1
-            st.success(f"Producto '{producto_nombre}' agregado correctamente.")
+        if submitted:
+            if producto and cantidad > 0 and precio_unitario >= 0:
+                producto_existente = st.session_state["inventario"]["Producto"] == producto
+                if producto_existente.any():
+                    st.session_state["inventario"].loc[producto_existente, "Cantidad"] += cantidad
+                else:
+                    nuevo_producto = {"Producto": producto, "Cantidad": cantidad, "Precio Unitario": precio_unitario}
+                    st.session_state["inventario"] = pd.concat(
+                        [st.session_state["inventario"], pd.DataFrame([nuevo_producto])], ignore_index=True
+                    )
+                st.success("Producto agregado/actualizado en el inventario.")
+            else:
+                st.error("Por favor, completa todos los campos correctamente.")
     
-    # Mostrar Productos
-    st.subheader("Productos Registrados")
-    st.write(st.session_state["productos"])
+    st.subheader("Inventario Actual")
+    st.dataframe(st.session_state["inventario"])
 
-    # Actualizar Producto
-    producto_id = st.number_input("ID del Producto a Actualizar", min_value=1, max_value=len(st.session_state["productos"]))
-    if st.button("Actualizar Producto"):
-        producto = st.session_state["productos"].iloc[producto_id - 1]
-        nombre_actualizado = st.text_input("Nuevo Nombre", producto["Producto"])
-        precio_actualizado = st.number_input("Nuevo Precio Unitario", min_value=0.0, format="%.2f", value=producto["Precio Unitario"])
-
-        if st.button("Guardar Cambios"):
-            st.session_state["productos"].loc[producto_id - 1, "Producto"] = nombre_actualizado
-            st.session_state["productos"].loc[producto_id - 1, "Precio Unitario"] = precio_actualizado
-            st.success("Producto actualizado correctamente.")
-
-    # Eliminar Producto
-    producto_a_eliminar = st.number_input("ID del Producto a Eliminar", min_value=1, max_value=len(st.session_state["productos"]))
-    if st.button("Eliminar Producto"):
-        if producto_a_eliminar <= len(st.session_state["productos"]):
-            st.session_state["productos"] = st.session_state["productos"].drop(producto_a_eliminar - 1, axis=0)
-            st.session_state["productos"].reset_index(drop=True, inplace=True)
-            st.success(f"Producto con ID {producto_a_eliminar} eliminado.")
-        else:
-            st.error("ID de producto no válido.")
-
-
-# CRUD Facturas
 def gestion_facturas():
     st.header("Gestión de Facturas")
     
-    # Crear Factura
-    cliente_id = st.number_input("ID del Cliente", min_value=1, max_value=len(st.session_state["clientes"]))
-    productos_seleccionados = st.multiselect("Selecciona los productos", st.session_state["productos"]["Producto"])
-
-    if len(productos_seleccionados) > 0:
-        st.subheader("Detalles de la Factura")
-        productos_detalle = []
-        total = 0
-        for producto in productos_seleccionados:
-            cantidad = st.number_input(f"Cantidad de {producto}", min_value=1, step=1)
-            producto_info = st.session_state["productos"][st.session_state["productos"]["Producto"] == producto]
-            precio_unitario = producto_info["Precio Unitario"].values[0]
-            total += precio_unitario * cantidad
-            productos_detalle.append((producto, cantidad, precio_unitario))
+    if st.session_state["clientes"].empty:
+        st.warning("No hay clientes registrados. Por favor, registra clientes primero.")
+        return
+    
+    if st.session_state["inventario"].empty:
+        st.warning("No hay productos en el inventario. Por favor, agrega productos primero.")
+        return
+    
+    with st.form("Registro de Factura"):
+        st.subheader("Registrar Venta")
+        cliente_id = st.selectbox("Selecciona Cliente ID", st.session_state["clientes"]["ID"])
+        cliente_nombre = st.session_state["clientes"].loc[
+            st.session_state["clientes"]["ID"] == cliente_id, "Nombre"
+        ].values[0]
+        producto = st.selectbox("Selecciona Producto", st.session_state["inventario"]["Producto"])
+        cantidad = st.number_input("Cantidad", min_value=1, step=1)
+        submitted = st.form_submit_button("Registrar Factura")
         
-        iva = total * 0.19
-        total_con_iva = total + iva
-        
-        if st.button("Generar Factura"):
-            cliente = st.session_state["clientes"].iloc[cliente_id - 1]
-            factura = {
-                "Factura ID": st.session_state["id_factura"],
-                "Cliente ID": cliente_id,
-                "Cliente Nombre": cliente["Nombre"],
-                "Productos": productos_detalle,
-                "Total": total,
-                "IVA": iva,
-                "Fecha": pd.to_datetime("today").strftime("%Y-%m-%d")
-            }
-            st.session_state["facturas"] = st.session_state["facturas"].append(factura, ignore_index=True)
-            st.session_state["id_factura"] += 1
-            st.success(f"Factura generada correctamente para el cliente {cliente['Nombre']}.")
-            st.write(f"Total con IVA: {total_con_iva}")
-
-    # Mostrar Facturas
+        if submitted:
+            producto_data = st.session_state["inventario"].loc[
+                st.session_state["inventario"]["Producto"] == producto
+            ]
+            stock_disponible = producto_data["Cantidad"].values[0]
+            precio_unitario = producto_data["Precio Unitario"].values[0]
+            
+            if cantidad <= stock_disponible:
+                total = cantidad * precio_unitario
+                nueva_factura = {
+                    "Factura ID": len(st.session_state["facturas"]) + 1,
+                    "Cliente ID": cliente_id,
+                    "Cliente Nombre": cliente_nombre,
+                    "Producto": producto,
+                    "Cantidad": cantidad,
+                    "Precio Unitario": precio_unitario,
+                    "Total": total
+                }
+                st.session_state["facturas"] = pd.concat(
+                    [st.session_state["facturas"], pd.DataFrame([nueva_factura])], ignore_index=True
+                )
+                
+                # Actualizar el inventario
+                st.session_state["inventario"].loc[
+                    st.session_state["inventario"]["Producto"] == producto, "Cantidad"
+                ] -= cantidad
+                
+                st.success(f"Factura registrada con éxito para {cliente_nombre}.")
+            else:
+                st.error("Stock insuficiente para esta venta.")
+    
     st.subheader("Facturas Registradas")
-    st.write(st.session_state["facturas"])
+    st.dataframe(st.session_state["facturas"])
 
-    # Exportar CSV
-    exportar_csv(st.session_state["facturas"], "facturas.csv")
+def gestion_nomina():
+    st.header("Gestión de Nómina")
+    comision_rate = st.slider("Porcentaje de Comisión (%)", min_value=1, max_value=50, value=10)
+    
+    if st.session_state["facturas"].empty:
+        st.warning("No hay facturas registradas. Por favor, registra ventas primero.")
+        return
+    
+    # Calcular comisiones
+    empleados = ["Empleado A", "Empleado B", "Empleado C"]
+    ventas_totales = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum()
+    comisiones = [{"Empleado": empleado, "Ventas Totales": ventas_totales.sum(), 
+                   "Comisión Ganada": ventas_totales.sum() * comision_rate / 100} for empleado in empleados]
+    st.session_state["comisiones"] = pd.DataFrame(comisiones)
+    
+    st.subheader("Comisiones Calculadas")
+    st.dataframe(st.session_state["comisiones"])
 
+def analisis_ventas():
+    st.header("Análisis de Ventas")
+    
+    if st.session_state["facturas"].empty:
+        st.warning("No hay datos de ventas disponibles.")
+        return
+    
+    st.subheader("Productos Más Vendidos")
+    productos_vendidos = st.session_state["facturas"].groupby("Producto")["Cantidad"].sum().sort_values(ascending=False)
+    st.bar_chart(productos_vendidos)
+    
+    st.subheader("Clientes con Más Ventas")
+    clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
+    st.bar_chart(clientes_ventas)
 
-# Menú de navegación
-modulo_seleccionado = st.sidebar.selectbox("Selecciona el módulo", ["Gestión de Clientes", "Gestión de Productos", "Gestión de Facturas"])
-
-if modulo_seleccionado == "Gestión de Clientes":
+# Navegar entre los módulos
+if module == "Gestión de Clientes":
     gestion_clientes()
-elif modulo_seleccionado == "Gestión de Productos":
-    gestion_productos()
-elif modulo_seleccionado == "Gestión de Facturas":
+elif module == "Gestión de Inventario":
+    gestion_inventario()
+elif module == "Gestión de Facturas":
     gestion_facturas()
+elif module == "Gestión de Nómina":
+    gestion_nomina()
+elif module == "Análisis de Ventas":
+    analisis_ventas()
+
