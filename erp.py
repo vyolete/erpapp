@@ -34,26 +34,6 @@ module = st.sidebar.radio("Selecciona un módulo:", [
     "Análisis de Ventas"
 ])
 
-# Función para gestionar clientes
-
-import streamlit as st
-import pandas as pd
-
-# Inicializar la lista de clientes si no existe en session_state
-if "clientes" not in st.session_state:
-    st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
-
-# Inicializar las claves del formulario si no están definidas
-if "cliente_id" not in st.session_state:
-    st.session_state["cliente_id"] = ""
-if "nombre" not in st.session_state:
-    st.session_state["nombre"] = ""
-if "correo" not in st.session_state:
-    st.session_state["correo"] = ""
-if "telefono" not in st.session_state:
-    st.session_state["telefono"] = ""
-
-# Función para gestionar clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
@@ -93,7 +73,10 @@ def gestion_clientes():
                 st.session_state["nombre"] = ""
                 st.session_state["correo"] = ""
                 st.session_state["telefono"] = ""
-    
+                
+                # Es importante actualizar la interfaz para reflejar los cambios.
+                st.experimental_rerun()  # Esto forzará la recarga de la app y los campos se vaciarán
+
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
