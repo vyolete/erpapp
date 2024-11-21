@@ -46,7 +46,7 @@ if "facturas" not in st.session_state:
     
 # Función de autenticación
 with st.sidebar:
-    st.title("ERP con Autenticación")
+    st.title("Módulos ERP")
 if not st.session_state["auth"]:
     st.sidebar.subheader("Iniciar Sesión")
     usuario = st.sidebar.text_input("Usuario")
