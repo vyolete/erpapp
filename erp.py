@@ -5,20 +5,25 @@ from fpdf import FPDF
 
 # Configuración inicial
 st.set_page_config(page_title="ERP con Autenticación", layout="wide")
-# Personalización
-logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
-empresa_nombre = "Mi Empresa ERP"
+st.sidebar.title("Módulos del ERP")
 
 # Variables de autenticación
 USER = "Lira"
 PASSWORD = "Lir@1120"
-st.sidebar.title("Módulos del ERP")
+
+
+# Personalización
+logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
+empresa_nombre = "Mi Empresa ERP"
+
+
+
 # Inicialización de variables globales
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
 if "modulo" not in st.session_state:
-    st.session_state["modulo"] = "Gestión de Clientes"
+    st.session_state["modulo_seleccionado"] = "Gestión de Clientes"
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
@@ -39,6 +44,7 @@ if "productos" not in st.session_state:
 
 if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Productos", "Total", "IVA", "Fecha"])
+    
 # Función de autenticación
 with st.sidebar:
     st.title("ERP con Autenticación")
