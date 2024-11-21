@@ -48,7 +48,7 @@ def gestion_clientes():
         correo = st.text_input("Correo Electrónico", value=st.session_state["correo"], key="correo")
         telefono = st.text_input("Teléfono", value=st.session_state["telefono"], key="telefono")
         
-        # Asegúrate de incluir el botón de envío
+        # Agregar el botón de enviar
         submitted = st.form_submit_button("Registrar")
         
         # Si el formulario es enviado
@@ -81,7 +81,6 @@ def gestion_clientes():
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
-
     # Verificar si hay clientes registrados
     if len(st.session_state["clientes"]) > 0:
         # Número de Cliente a buscar, eliminar o actualizar
