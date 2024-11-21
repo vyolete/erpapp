@@ -37,24 +37,23 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 # Función para gestionar clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
-    
-    # Crear Cliente
-    with st.form(key="form_cliente"):
-        cliente_nombre = st.text_input("Nombre del Cliente")
-        cliente_correo = st.text_input("Correo del Cliente")
-        cliente_telefono = st.text_input("Teléfono del Cliente")
-        submit_button = st.form_submit_button(label="Agregar Cliente")
+    with st.form("Registro de Cliente"):
+        st.subheader("Registrar Cliente")
+        cliente_id = st.text_input("ID del Cliente")
+        nombre = st.text_input("Nombre del Cliente")
+        correo = st.text_input("Correo Electrónico")
+        telefono = st.text_input("Teléfono")
+        submitted = st.form_submit_button("Registrar")
         
-        if submit_button and cliente_nombre and cliente_correo and cliente_telefono:
-            nuevo_cliente = {
-                "ID": st.session_state["id_cliente"],
-                "Nombre": cliente_nombre,
-                "Correo": cliente_correo,
-                "Teléfono": cliente_telefono
-            }
-            st.session_state["clientes"] = st.session_state["clientes"].append(nuevo_cliente, ignore_index=True)
-            st.session_state["id_cliente"] += 1
-            st.success(f"Cliente '{cliente_nombre}' agregado correctamente.")
+        if submitted:
+            if cliente_id and nombre and correo:
+                nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
+                st.session_state["clientes"] = pd.concat(
+                    [st.session_state["clientes"], pd.DataFrame([nuevo_cliente])], ignore_index=True
+                )
+                st.success("Cliente registrado exitosamente.")
+            else:
+                st.error("Por favor, completa todos los campos obligatorios.")
     
     # Mostrar Clientes
     st.subheader("Clientes Registrados")
