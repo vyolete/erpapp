@@ -54,12 +54,7 @@ with st.sidebar:
             else:
                 st.error("Usuario o contraseña incorrectos.")
     else:
-        modulo_seleccionado = st.radio("Módulos:", [
-            "Gestión de Clientes", 
-            "Gestión de Inventario", 
-            "Gestión de Facturas", 
-            "Gestión de Reportes"
-        ])
+        modulo_seleccionado = st.radio("Módulos:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
         if st.button("Cerrar Sesión"):
             st.session_state["auth"] = False
             st.success("Sesión cerrada correctamente.")
