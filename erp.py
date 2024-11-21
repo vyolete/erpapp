@@ -22,8 +22,8 @@ empresa_nombre = "Mi Empresa ERP"
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
-if "modulo_seleccionado" not in st.session_state:
-    st.session_state["modulo_seleccionado"] = None
+if "modulo" not in st.session_state:
+    st.session_state["modulo"] = "Gestión de Clientes"
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
@@ -230,6 +230,7 @@ def barra_lateral():
                 if usuario == USER and contraseña == PASSWORD:
                     st.session_state["auth"] = True
                     st.success("Inicio de sesión exitoso.")
+                    st.experimental_rerun()
                 else:
                     st.error("Usuario o contraseña incorrectos.")
         else:
