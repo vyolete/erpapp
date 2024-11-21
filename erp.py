@@ -232,7 +232,7 @@ def gestion_facturas():
     st.subheader("Resumen de Factura")
     st.table(pd.DataFrame(productos_detalle))
     st.write(f"Subtotal: ${total:,.2f}")
-    st.write(f"IVA (19%): ${iva:,.2f}")
+    st.write(f"IVA (16%): ${iva:,.2f}")
     st.write(f"Total: ${total_con_iva:,.2f}")
     
     # Confirmación y registro de factura
@@ -283,27 +283,29 @@ def gestion_reportes():
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
 def analisis_ventas():
-    st.header("Análisis de Ventas")
+    st.title("Análisis de Ventas")
     
     if st.session_state["facturas"].empty:
-        st.warning("No hay datos de ventas disponibles.")
+        st.warning("No hay ventas registradas.")
         return
-    
-    # Productos más vendidos
+
     productos_vendidos = []
     for factura in st.session_state["facturas"]["Productos"]:
         for producto in factura:
-            productos_vendidos.append(producto[0])  # Producto es el primer elemento de la tupla
+            # Validar estructura del producto
+            if isinstance(producto, dict) and "Producto" in producto:
+                productos_vendidos.append(producto["Producto"])
+            else:
+                st.error(f"Error al procesar producto: {producto}")
     
-    productos_vendidos_df = pd.Series(productos_vendidos).value_counts()
-    st.subheader("Productos Más Vendidos")
-    st.bar_chart(productos_vendidos_df)
-
-    # Clientes con más ventas
-    clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
-    st.subheader("Clientes con Más Ventas")
-    st.bar_chart(clientes_ventas)
+    # Crear DataFrame para análisis
+    ventas_df = pd.DataFrame(productos_vendidos, columns=["Producto"])
+    resumen_ventas = ventas_df["Producto"].value_counts().reset_index()
+    resumen_ventas.columns = ["Producto", "Cantidad Vendida"]
     
+    st.subheader("Resumen de Ventas")
+    st.table(resumen_ventas)
+  
 # Navegación entre módulos
 if st.session_state["auth"]:
     if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
