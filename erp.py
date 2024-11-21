@@ -38,34 +38,48 @@ module = st.sidebar.radio("Selecciona un módulo:", [
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
-    # Crear Cliente
-    with st.form(key="form_cliente"):
-        cliente_nombre = st.text_input("Nombre del Cliente")
-        cliente_correo = st.text_input("Correo del Cliente")
-        cliente_telefono = st.text_input("Teléfono del Cliente")
-        submit_button = st.form_submit_button(label="Agregar Cliente")
+    # Crear un formulario para el registro de clientes
+    with st.form("Registro de Cliente"):
+        st.subheader("Registrar Cliente")
         
-        if submit_button and cliente_nombre and cliente_correo and cliente_telefono:
-            nuevo_cliente = {
-                "ID": st.session_state["id_cliente"],
-                "Nombre": cliente_nombre,
-                "Correo": cliente_correo,
-                "Teléfono": cliente_telefono
-            }
-            st.session_state["clientes"] = st.session_state["clientes"].append(nuevo_cliente, ignore_index=True)
-            st.session_state["id_cliente"] += 1
-            st.success(f"Cliente '{cliente_nombre}' agregado correctamente.")
-                    # Limpiar los campos para registrar un nuevo cliente
-            cliente_id = ""
-            nombre = ""
-            correo = ""
-            telefono = ""
+        # Campos de entrada
+        cliente_id = st.text_input("ID del Cliente")
+        nombre = st.text_input("Nombre del Cliente")
+        correo = st.text_input("Correo Electrónico")
+        telefono = st.text_input("Teléfono")
+        
+        # Botón de envío
+        submitted = st.form_submit_button("Registrar")
+        
+        # Si el formulario es enviado
+        if submitted:
+            # Verificamos que los campos obligatorios estén completos
+            if cliente_id and nombre and correo:
+                # Creamos un nuevo cliente como un diccionario
+                nuevo_cliente = {"ID": cliente_id, "Nombre": nombre, "Correo": correo, "Teléfono": telefono}
                 
-        else:
+                # Convertimos el diccionario en un DataFrame
+                nuevo_cliente_df = pd.DataFrame([nuevo_cliente])
+                
+                # Usamos pd.concat() para agregar el nuevo cliente al DataFrame de clientes
+                st.session_state["clientes"] = pd.concat(
+                    [st.session_state["clientes"], nuevo_cliente_df], ignore_index=True
+                )
+                
+                # Mostramos un mensaje de éxito
+                st.success("Cliente registrado exitosamente.")
+                
+                # Limpiar los campos para registrar un nuevo cliente
+                cliente_id = ""
+                nombre = ""
+                correo = ""
+                telefono = ""
+                
+            else:
                 # Si los campos obligatorios están vacíos, mostramos un mensaje de error
-            st.error("Por favor, completa todos los campos obligatorios.")
+                st.error("Por favor, completa todos los campos obligatorios.")
     
-    # Mostrar Clientes
+    # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
 
