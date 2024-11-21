@@ -22,8 +22,8 @@ empresa_nombre = "Mi Empresa ERP"
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
-#if "modulo_seleccionado" not in st.session_state:
-    #st.session_state["modulo_seleccionado"] = None
+if "modulo_seleccionado" not in st.session_state:
+    st.session_state["modulo_seleccionado"] = None
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
@@ -56,16 +56,21 @@ with st.sidebar:
             if usuario == USER and contraseña == PASSWORD:
                 st.session_state["auth"] = True
                 st.success("Inicio de sesión exitoso.")
-                    
             else:
-                    st.error("Usuario o contraseña incorrectos.")
+                st.error("Usuario o contraseña incorrectos.")
     else:
         st.subheader(f"Bienvenido, {USER}")
-        modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes","Análisis de Ventas"])
+        st.session_state["modulo_seleccionado"] = st.radio(
+            "Selecciona un módulo:",
+            ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes", "Análisis de Ventas"],
+            index=["Gestión de Clientes", "Gestión de Inventario", "Generar Factura", "Generar Reportes", "Análisis de Ventas"].index(
+                st.session_state["modulo_seleccionado"]
+            ) if st.session_state["modulo_seleccionado"] else 0,
+        )
         if st.button("Cerrar Sesión"):
             st.session_state["auth"] = False
+            st.session_state["modulo_seleccionado"] = None
             st.success("Sesión cerrada correctamente.")
-
 
 # Funciones auxiliares
 def exportar_csv(df, nombre_archivo):
@@ -236,15 +241,17 @@ def analisis_ventas():
     clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
     st.bar_chart(clientes_ventas)
 
-if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
-    gestion_clientes()
-elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
-    gestion_inventario()
-elif st.session_state["modulo_seleccionado"] == "Gestión de Facturas":
-    gestion_facturas()
-elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
-    gestion_reportes()
-elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
-    analisis_ventas()
+# Navegación entre módulos
+if st.session_state["auth"]:
+    if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
+        gestion_clientes()
+    elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
+        gestion_inventario()
+    elif st.session_state["modulo_seleccionado"] == "Generar Factura":
+        gestion_facturas()
+    elif st.session_state["modulo_seleccionado"] == "Generar Reportes":
+        gestion_reportes()
+    elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
+        analisis_ventas()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
