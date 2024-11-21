@@ -219,7 +219,7 @@ def analisis_ventas():
 
 
 #modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
-def barra_lateral():
+
     with st.sidebar:
         st.title("ERP con Autenticación")
         if not st.session_state["auth"]:
@@ -230,7 +230,7 @@ def barra_lateral():
                 if usuario == USER and contraseña == PASSWORD:
                     st.session_state["auth"] = True
                     st.success("Inicio de sesión exitoso.")
-                    st.experimental_rerun()
+                    
                 else:
                     st.error("Usuario o contraseña incorrectos.")
         else:
@@ -239,8 +239,7 @@ def barra_lateral():
             if st.button("Cerrar Sesión"):
                 st.session_state["auth"] = False
                 st.success("Sesión cerrada correctamente.")
-# Control de navegación
-barra_lateral()
+
 
 if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
     gestion_clientes()
