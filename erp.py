@@ -22,8 +22,8 @@ empresa_nombre = "Mi Empresa ERP"
 if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
-if "modulo_seleccionado" not in st.session_state:
-    st.session_state["modulo_seleccionado"] = None
+#if "modulo_seleccionado" not in st.session_state:
+    #st.session_state["modulo_seleccionado"] = None
 
 # Parámetros de ID
 if "id_cliente" not in st.session_state:
@@ -236,11 +236,6 @@ def analisis_ventas():
     clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
     st.bar_chart(clientes_ventas)
 
-
-#modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
-
-
-
 if st.session_state["modulo_seleccionado"] == "Gestión de Clientes":
     gestion_clientes()
 elif st.session_state["modulo_seleccionado"] == "Gestión de Inventario":
@@ -250,6 +245,6 @@ elif st.session_state["modulo_seleccionado"] == "Gestión de Facturas":
 elif st.session_state["modulo_seleccionado"] == "Gestión de Reportes":
     gestion_reportes()
 elif st.session_state["modulo_seleccionado"] == "Análisis de Ventas":
-    gestion_reportes()
+    analisis_ventas()
 else:
     st.warning("Por favor, inicia sesión para continuar.")
