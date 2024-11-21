@@ -11,8 +11,8 @@ USER = "Lira"
 PASSWORD = "Lir@1120"
 
 # Personalización
-logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
-empresa_nombre = "Mi Empresa ERP"
+#logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
+#empresa_nombre = "Mi Empresa ERP"
 
 # Inicialización de variables globales
 if "auth" not in st.session_state:
@@ -222,8 +222,9 @@ def gestion_reportes():
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
 # Menú de navegación
-module = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 st.sidebar.title("Módulos del ERP")
+module = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
+
 
 if modulo_seleccionado == "Gestión de Clientes":
     gestion_clientes()
