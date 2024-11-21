@@ -91,9 +91,6 @@ def gestion_clientes():
     else:
         st.warning("No hay clientes registrados para buscar, eliminar o actualizar.")
 
-# Llamar a la función
-gestion_clientes()
-
 def gestion_inventario():
     st.header("Gestión de Inventario")
     with st.form("Agregar Producto"):
