@@ -13,7 +13,7 @@ empresa_nombre = "Mi Empresa ERP"
 # Variables globales
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
-    st.session_state["id_cliente"] = 1
+    st.session_state["cliente_id"] = ""
 
 if "facturas" not in st.session_state:
     st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Producto", "Cantidad", "Precio Unitario", "Total"])
