@@ -42,11 +42,11 @@ def gestion_clientes():
     with st.form("Registro de Cliente"):
         st.subheader("Registrar Cliente")
         
-        # Campos de entrada
-        cliente_id = st.text_input("ID del Cliente")
-        nombre = st.text_input("Nombre del Cliente")
-        correo = st.text_input("Correo Electrónico")
-        telefono = st.text_input("Teléfono")
+        # Campos de entrada con valores almacenados en session_state
+        cliente_id = st.text_input("ID del Cliente", key="cliente_id")
+        nombre = st.text_input("Nombre del Cliente", key="nombre")
+        correo = st.text_input("Correo Electrónico", key="correo")
+        telefono = st.text_input("Teléfono", key="telefono")
         
         # Botón de envío
         submitted = st.form_submit_button("Registrar")
@@ -69,11 +69,11 @@ def gestion_clientes():
                 # Mostramos un mensaje de éxito
                 st.success("Cliente registrado exitosamente.")
                 
-                # Limpiar los campos para registrar un nuevo cliente
-                cliente_id = ""
-                nombre = ""
-                correo = ""
-                telefono = ""
+                # Limpiar los campos después de registrar
+                st.session_state["cliente_id"] = ""
+                st.session_state["nombre"] = ""
+                st.session_state["correo"] = ""
+                st.session_state["telefono"] = ""
                 
             else:
                 # Si los campos obligatorios están vacíos, mostramos un mensaje de error
