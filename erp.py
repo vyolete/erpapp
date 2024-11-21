@@ -44,10 +44,10 @@ def gestion_clientes():
         st.subheader("Registrar Cliente")
         
         # Campos de entrada con valores almacenados en session_state
-        cliente_id = st.text_input("ID del Cliente", key="cliente_id")
-        nombre = st.text_input("Nombre del Cliente", key="nombre")
-        correo = st.text_input("Correo Electrónico", key="correo")
-        telefono = st.text_input("Teléfono", key="telefono")
+        cliente_id = st.text_input("ID del Cliente", value=st.session_state["cliente_id"], key="cliente_id")
+        nombre = st.text_input("Nombre del Cliente", value=st.session_state["nombre"], key="nombre")
+        correo = st.text_input("Correo Electrónico", value=st.session_state["correo"], key="correo")
+        telefono = st.text_input("Teléfono", value=st.session_state["telefono"], key="telefono")
         
         # Botón de envío
         submitted = st.form_submit_button("Registrar")
@@ -75,14 +75,10 @@ def gestion_clientes():
                 st.session_state["nombre"] = ""
                 st.session_state["correo"] = ""
                 st.session_state["telefono"] = ""
-                
-                # Actualizar la UI para reflejar los cambios
-                st.experimental_rerun()
     
     # Mostrar los clientes registrados
     st.subheader("Clientes Registrados")
     st.write(st.session_state["clientes"])
-
     # Verificar si hay clientes registrados
     if len(st.session_state["clientes"]) > 0:
         # Número de Cliente a buscar, eliminar o actualizar
