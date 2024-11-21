@@ -212,7 +212,21 @@ def gestion_reportes():
     # Exportar el reporte a CSV
     exportar_csv(st.session_state["facturas"], "reportes_contables.csv")
 
-# Menú de navegación
+def analisis_ventas():
+    st.header("Análisis de Ventas")
+    
+    if st.session_state["facturas"].empty:
+        st.warning("No hay datos de ventas disponibles.")
+        return
+    
+    st.subheader("Productos Más Vendidos")
+    productos_vendidos = st.session_state["facturas"].groupby("Producto")["Cantidad"].sum().sort_values(ascending=False)
+    st.bar_chart(productos_vendidos)
+    
+    st.subheader("Clientes con Más Ventas")
+    clientes_ventas = st.session_state["facturas"].groupby("Cliente Nombre")["Total"].sum().sort_values(ascending=False)
+    st.bar_chart(clientes_ventas)
+
 
 #modulo_seleccionado = st.sidebar.radio("Selecciona un módulo:", ["Gestión de Clientes", "Gestión de Inventario", "Generar Factura","Generar Reportes"])
 
@@ -225,3 +239,5 @@ elif modulo_seleccionado == "Generar Factura":
     gestion_facturas()
 elif modulo_seleccionado == "Generar Reportes":
     gestion_reportes()
+elif module == "Análisis de Ventas":
+    analisis_ventas()
