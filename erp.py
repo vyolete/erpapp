@@ -13,16 +13,15 @@ empresa_nombre = "Mi Empresa ERP"
 # Variables globales
 if "clientes" not in st.session_state:
     st.session_state["clientes"] = pd.DataFrame(columns=["ID", "Nombre", "Correo", "Teléfono"])
+
+if "cliente_id" not in st.session_state:
     st.session_state["cliente_id"] = ""
-
-if "facturas" not in st.session_state:
-    st.session_state["facturas"] = pd.DataFrame(columns=["Factura ID", "Cliente ID", "Cliente Nombre", "Producto", "Cantidad", "Precio Unitario", "Total"])
-
-if "inventario" not in st.session_state:
-    st.session_state["inventario"] = pd.DataFrame(columns=["Producto", "Cantidad", "Precio Unitario"])
-
-if "comisiones" not in st.session_state:
-    st.session_state["comisiones"] = pd.DataFrame(columns=["Empleado", "Ventas Totales", "Comisión Ganada"])
+if "nombre" not in st.session_state:
+    st.session_state["nombre"] = ""
+if "correo" not in st.session_state:
+    st.session_state["correo"] = ""
+if "telefono" not in st.session_state:
+    st.session_state["telefono"] = ""
 
 # Barra lateral para la navegación
 st.sidebar.title("Módulos del ERP")
