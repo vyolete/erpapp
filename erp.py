@@ -34,6 +34,7 @@ module = st.sidebar.radio("Selecciona un módulo:", [
     "Análisis de Ventas"
 ])
 
+# Función para gestionar clientes
 def gestion_clientes():
     st.header("Gestión de Clientes")
     
