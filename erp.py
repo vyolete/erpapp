@@ -5,14 +5,15 @@ from fpdf import FPDF
 
 # Configuración inicial
 st.set_page_config(page_title="ERP con Autenticación", layout="wide")
+# Personalización
+logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
+empresa_nombre = "Mi Empresa ERP"
 
 # Variables de autenticación
 USER = "Lira"
 PASSWORD = "Lir@1120"
 
-# Personalización
-#logo_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/ERP_logo.png/240px-ERP_logo.png"
-#empresa_nombre = "Mi Empresa ERP"
+
 
 # Inicialización de variables globales
 if "auth" not in st.session_state:
