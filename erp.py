@@ -173,41 +173,99 @@ def gestion_inventario():
 def gestion_facturas():
     st.header("Generar Factura")
     st.write("Selecciona un cliente y productos para crear una factura.")
-
-    cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
-    cliente_nombre = st.session_state["clientes"][st.session_state["clientes"]["ID"] == cliente_id]["Nombre"].values[0]
     
-    # Selección múltiple de productos
-    productos_seleccionados = st.multiselect("Selecciona productos", st.session_state["productos"]["Producto"].values)
+    if st.session_state["clientes"].empty:
+        st.warning("No hay clientes registrados. Por favor, registra clientes antes de crear una factura.")
+        return
+    
+    if st.session_state["productos"].empty:
+        st.warning("No hay productos en el inventario. Por favor, registra productos antes de crear una factura.")
+        return
+    
+    cliente_id = st.selectbox("Seleccionar Cliente", st.session_state["clientes"]["ID"])
+    cliente_nombre = st.session_state["clientes"].loc[
+        st.session_state["clientes"]["ID"] == cliente_id, "Nombre"
+    ].values[0]
+    
+    # Selección de productos
+    productos_seleccionados = st.multiselect(
+        "Selecciona productos", 
+        st.session_state["productos"]["Producto"].values
+    )
+    
+    if not productos_seleccionados:
+        st.info("Selecciona al menos un producto para generar una factura.")
+        return
+    
     productos_detalle = []
     total = 0
-
-    for producto in productos_seleccionados:
-        cantidad = st.number_input(f"Cantidad de {producto}", min_value=1, step=1)
-        producto_info = st.session_state["productos"][st.session_state["productos"]["Producto"] == producto]
-        precio_unitario = producto_info["Precio Unitario"].values[0]
-        total += precio_unitario * cantidad
-        productos_detalle.append((producto, cantidad, precio_unitario))
     
+    for producto in productos_seleccionados:
+        producto_info = st.session_state["productos"].loc[
+            st.session_state["productos"]["Producto"] == producto
+        ]
+        precio_unitario = producto_info["Precio Unitario"].values[0]
+        stock_disponible = producto_info["Cantidad"].values[0]
+        
+        # Selección de cantidad
+        cantidad = st.number_input(
+            f"Cantidad de {producto} (Disponible: {stock_disponible})", 
+            min_value=1, 
+            max_value=stock_disponible, 
+            step=1
+        )
+        
+        subtotal = precio_unitario * cantidad
+        total += subtotal
+        productos_detalle.append({
+            "Producto": producto,
+            "Cantidad": cantidad,
+            "Precio Unitario": precio_unitario,
+            "Subtotal": subtotal
+        })
+    
+    # Calcular IVA y total final
     iva = total * 0.19
     total_con_iva = total + iva
-
-    # Botón de generar factura
-    if st.button("Generar Factura"):
+    
+    # Mostrar resumen
+    st.subheader("Resumen de Factura")
+    st.table(pd.DataFrame(productos_detalle))
+    st.write(f"Subtotal: ${total:,.2f}")
+    st.write(f"IVA (19%): ${iva:,.2f}")
+    st.write(f"Total: ${total_con_iva:,.2f}")
+    
+    # Confirmación y registro de factura
+    if st.button("Confirmar y Generar Factura"):
         factura_id = st.session_state["id_factura"]
         fecha = pd.to_datetime("today").strftime("%Y-%m-%d")
+        
+        # Registrar factura
         factura = pd.DataFrame([{
-            "Factura ID": factura_id, "Cliente ID": cliente_id, "Cliente Nombre": cliente_nombre,
-            "Productos": productos_detalle, "Total": total, "IVA": iva, "Fecha": fecha
+            "Factura ID": factura_id, 
+            "Cliente ID": cliente_id, 
+            "Cliente Nombre": cliente_nombre,
+            "Productos": productos_detalle, 
+            "Total": total, 
+            "IVA": iva, 
+            "Fecha": fecha
         }])
         st.session_state["facturas"] = pd.concat([st.session_state["facturas"], factura], ignore_index=True)
         st.session_state["id_factura"] += 1  # Incrementar el ID para la siguiente factura
-
+        
+        # Reducir inventario
+        for detalle in productos_detalle:
+            producto = detalle["Producto"]
+            cantidad = detalle["Cantidad"]
+            st.session_state["productos"].loc[
+                st.session_state["productos"]["Producto"] == producto, "Cantidad"
+            ] -= cantidad
+        
         st.success(f"Factura {factura_id} generada correctamente.")
-        st.write(f"Total: {total_con_iva}")
-
-        # Exportar la factura
-        exportar_csv(st.session_state["facturas"], "facturas.csv")
+        st.write(f"Total con IVA: ${total_con_iva:,.2f}")
+        
+        # Exportar factura
+        exportar_csv(st.session_state["facturas"], f"factura_{factura_id}.csv")
 
 def gestion_reportes():
  
